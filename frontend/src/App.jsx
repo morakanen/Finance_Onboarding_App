@@ -1,8 +1,8 @@
 import React from "react";
 import "./App.css"; // Import global styles
-import Header from "./frontend/src/Components/Header.js";
-import Footer from "./frontend/src/Components/Footer.js";
-import ClientForm from "./frontend/src/Pages/TestForm.js";
+import Header from "./Components/Header";
+import Footer from "./Components/Footer";
+import ClientForm from "./Pages/TestForm";
 
 const App = () => {
   return (
