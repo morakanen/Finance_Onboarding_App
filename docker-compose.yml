@@ -4,6 +4,8 @@ services:
   backend:
     build: ./backend
     container_name: fastapi_backend
+    networks:
+      - app_network  # ✅ Add this network
     ports:
       - "8000:8000"
     volumes:
@@ -18,6 +20,8 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres_db
+    networks:
+      - app_network  # ✅ Add this network
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -31,6 +35,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis_cache
+    networks:
+      - app_network  # ✅ Add this network
     restart: always
     ports:
       - "6379:6379"
@@ -40,6 +46,8 @@ services:
   mongo:
     image: mongo:latest
     container_name: mongo_db
+    networks:
+      - app_network  # ✅ Add this network
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -53,11 +61,32 @@ services:
   frontend:
     build: ./frontend
     container_name: react_frontend
+    networks:
+      - app_network  # ✅ Add this network
     ports:
       - "3000:80"  # ✅ Serve Nginx on port 3000
     depends_on:
       - backend
     restart: always
+
+  pgadmin:
+      image: dpage/pgadmin4
+      container_name: pgadmin
+      restart: always
+      networks:
+        - app_network  # ✅ Ensure it's in the same network as PostgreSQL
+      ports:
+        - "5050:80"  # ✅ You can access pgAdmin at http://localhost:5050
+      environment:
+        PGADMIN_DEFAULT_EMAIL: admin@example.com  # ✅ Change this as needed
+        PGADMIN_DEFAULT_PASSWORD: admin  # ✅ Change this as needed
+      depends_on:
+        - postgres
+
+
+networks:
+  app_network:  # ✅ Define the network
+    driver: bridge
 
 volumes:
   postgres_data:
