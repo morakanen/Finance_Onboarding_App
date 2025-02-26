@@ -1,12 +1,14 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; 
 import "./App.css"; // Import global styles
+
 import Header from "./Components/Header";
 import Footer from "./Components/Footer";
 import ClientForm from "./Pages/TestForm";
 
 const App = () => {
   return (
-    <Router>
+    <Router>  
       <Header />
       <Routes>
         <Route path="/" element={<h2>Welcome to Client Onboarding</h2>} />
@@ -18,5 +20,3 @@ const App = () => {
 };
 
 export default App;
-
-
