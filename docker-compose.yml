@@ -1,4 +1,3 @@
-version: '3.9'
 
 services:
   backend:
@@ -62,12 +61,16 @@ services:
     build: ./frontend
     container_name: react_frontend
     networks:
-      - app_network  # ✅ Add this network
+      - app_network
     ports:
-      - "3000:80"  # ✅ Serve Nginx on port 3000
+      - "3000:80"
     depends_on:
       - backend
     restart: always
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    
 
   pgadmin:
       image: dpage/pgadmin4
