@@ -31,17 +31,7 @@ app.add_middleware(
 
 import models
 
-# Create tables in the database
-Base.metadata.create_all(bind=engine)
 
-
-class ClientBase(BaseModel):
-    name: str
-    email: str
-    phone: str
-
-    class Config:
-        orm_mode = True 
 
 
 

@@ -1,12 +1,16 @@
 from sqlalchemy import Column, String, UUID, TIMESTAMP, Integer, ForeignKey, Enum, JSON
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from database import Base
+
 import uuid
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
+
+Base=declarative_base()
+metadata = Base.metadata
 
 
 class User(Base):
