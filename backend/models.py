@@ -1,17 +1,15 @@
-from sqlalchemy import Column, String, UUID, TIMESTAMP, Integer, ForeignKey, Enum, JSON
+from sqlalchemy import Column, String, UUID, TIMESTAMP, Integer, ForeignKey, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-
+from sqlalchemy import Enum as SQLAlchemyEnum
+import enum
 import uuid
-from motor.motor_asyncio import AsyncIOMotorClient
-from datetime import datetime
-from pydantic import BaseModel
-from typing import Optional
+from database import engine,Base  # ✅ Correct way to import Base
 
-Base=declarative_base()
-metadata = Base.metadata
-
+class RoleEnum(str, enum.Enum):
+    user = "user"
+    admin = "admin"
 
 class User(Base):
     __tablename__ = "users"
@@ -19,10 +17,8 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    role = Column(String, default="user")
+    role = Column(SQLAlchemyEnum(RoleEnum), default=RoleEnum.user)
 
-
-    
 class Client(Base):
     __tablename__ = "clients"
     
@@ -31,16 +27,27 @@ class Client(Base):
     email = Column(String, unique=True, nullable=False)
     phone = Column(String, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
-    onboarding = relationship("OnboardingProcess", back_populates="client")
+
+    onboarding = relationship("OnboardingProcess", back_populates="client", lazy="joined")
+
+class StatusEnum(str, enum.Enum):
+    pending = "pending"
+    in_progress = "in_progress"
+    completed = "completed"
 
 class OnboardingProcess(Base):
     __tablename__ = "onboarding_processes"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"))
-    status = Column(Enum("pending", "in_progress", "completed", name="status_enum"), default="pending")
+    status = Column(SQLAlchemyEnum(StatusEnum), default=StatusEnum.pending)
     created_at = Column(TIMESTAMP, server_default=func.now())
-    client = relationship("Client", back_populates="onboarding")
+
+    client = relationship("Client", back_populates="onboarding", lazy="joined")
+
+class RiskEnum(str, enum.Enum):
+    high = "high"
+    standard = "standard"
 
 class RiskAssessment(Base):
     __tablename__ = "risk_assessments"
@@ -48,6 +55,5 @@ class RiskAssessment(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"))
     risk_score = Column(Integer, nullable=False)
-    classification = Column(Enum("high", "standard", name="risk_enum"), nullable=False)
+    classification = Column(SQLAlchemyEnum(RiskEnum), nullable=False)
     details = Column(JSON, nullable=True)
-

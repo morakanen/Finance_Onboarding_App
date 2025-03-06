@@ -1,8 +1,8 @@
-"""inital test
+"""Initial migration
 
-Revision ID: 981abbad0c18
+Revision ID: 01520513d0ac
 Revises: 
-Create Date: 2025-03-05 16:15:21.236554
+Create Date: 2025-03-06 21:23:28.396298
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '981abbad0c18'
+revision: str = '01520513d0ac'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,7 +34,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('email', sa.String(), nullable=True),
     sa.Column('hashed_password', sa.String(), nullable=True),
-    sa.Column('role', sa.String(), nullable=True),
+    sa.Column('role', sa.Enum('user', 'admin', name='roleenum'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
@@ -43,7 +43,7 @@ def upgrade() -> None:
     op.create_table('onboarding_processes',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('client_id', sa.UUID(), nullable=True),
-    sa.Column('status', sa.Enum('pending', 'in_progress', 'completed', name='status_enum'), nullable=True),
+    sa.Column('status', sa.Enum('pending', 'in_progress', 'completed', name='statusenum'), nullable=True),
     sa.Column('created_at', sa.TIMESTAMP(), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['client_id'], ['clients.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('client_id', sa.UUID(), nullable=True),
     sa.Column('risk_score', sa.Integer(), nullable=False),
-    sa.Column('classification', sa.Enum('high', 'standard', name='risk_enum'), nullable=False),
+    sa.Column('classification', sa.Enum('high', 'standard', name='riskenum'), nullable=False),
     sa.Column('details', sa.JSON(), nullable=True),
     sa.ForeignKeyConstraint(['client_id'], ['clients.id'], ),
     sa.PrimaryKeyConstraint('id')

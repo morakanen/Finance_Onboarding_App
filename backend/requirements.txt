@@ -7,3 +7,5 @@ redis
 psycopg2-binary
 pymongo
 motor
+alembic
+pydantic[email]

@@ -1,12 +1,15 @@
 import uvicorn
-from fastapi import Depends, FastAPI
+from fastapi import Depends,HTTPException, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List,Annotated
 from sqlalchemy.orm import Session
-from database import engine,Base,get_db,mdb
+from database import engine,get_db,mdb
+import models
+from schemas import ClientCreate, ClientResponse
 
 app = FastAPI()
+
 
 origins = [
     "http://localhost:3000",
@@ -29,9 +32,8 @@ app.add_middleware(
     
 )
 
-import models
 
-
+models.Base.metadata.create_all(bind=engine)
 
 
 
@@ -60,13 +62,13 @@ async def test_mongo():
     except Exception as e:
         return {"error": str(e)}
     
-@app.post("/add-clients", response_model=ClientBase) 
-def create_client(client: ClientBase, db: Session = Depends(get_db)):
+@app.post("/add-clients", response_model=ClientResponse)
+def create_client(client: ClientCreate, db: Session = Depends(get_db)):
     new_client = models.Client(name=client.name, email=client.email, phone=client.phone)
     db.add(new_client)
     db.commit()
     db.refresh(new_client)
-    return new_client  # ✅ Now it returns a valid Pydantic model
+    return new_client
 
 
 
