@@ -13,9 +13,9 @@ const Header = () => {
               Home
             </Button>
           </Link>
-          <Link to="/add-client">
+          <Link to="/Auth">
             <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white">
-              Add Client
+              Login/Register
             </Button>
           </Link>
         </nav>

@@ -1,4 +1,3 @@
-// App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,6 +7,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import HomePage from "./Pages/Homepage";
 import OnboardingForm from "./Pages/OnBoardingForm";
+import AuthPage from "./Pages/Authpage"; // Import the AuthPage component
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -26,7 +26,13 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Route to Home Page */}
         <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
+        
+        {/* Route to Auth Page */}
+        <Route path="/Auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
+        
+        {/* Onboarding step route */}
         <Route path="/onboarding/:step" element={<PageWrapper><OnboardingForm /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
