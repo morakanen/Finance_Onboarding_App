@@ -1,4 +1,4 @@
-fastapi
+fastapi[all]
 uvicorn
 pydantic
 sqlalchemy
@@ -9,3 +9,6 @@ pymongo
 motor
 alembic
 pydantic[email]
+bcrypt
+pyjwt
+passlib

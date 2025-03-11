@@ -1,13 +1,15 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+// src/App.jsx
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import "./App.css"; // Tailwind global styles
+import useAuthStore from "./store/AuthStore"; // Import Zustand store
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import HomePage from "./Pages/Homepage";
-import OnboardingForm from "./Pages/OnBoardingForm";
-import AuthPage from "./Pages/Authpage"; // Import the AuthPage component
+import AuthPage from "./Pages/Authpage"; // Auth Page (Login/Register)
+import Dashboard from "./Pages/Dashboard"; // Client Dashboard
+import AdminDashboard from "./Pages/AdminDashboard"; // Admin Dashboard
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -22,18 +24,27 @@ const PageWrapper = ({ children }) => (
 );
 
 const AnimatedRoutes = () => {
-  const location = useLocation();
+  const { user, role, loading, init } = useAuthStore(); // Get auth store state
+
+  useEffect(() => {
+    init(); // Initialize auth state on app load
+  }, []);
+
+  if (loading) return <div>Loading...</div>; // Prevents infinite loading
+
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {/* Route to Home Page */}
+      <Routes>
         <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
-        
-        {/* Route to Auth Page */}
-        <Route path="/Auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
-        
-        {/* Onboarding step route */}
-        <Route path="/onboarding/:step" element={<PageWrapper><OnboardingForm /></PageWrapper>} />
+        <Route path="/auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
+        <Route
+          path="/dashboard"
+          element={user ? <PageWrapper><Dashboard /></PageWrapper> : <Navigate to="/auth" />}
+        />
+        <Route
+          path="/admin/dashboard"
+          element={role === "admin" ? <PageWrapper><AdminDashboard /></PageWrapper> : <Navigate to="/auth" />}
+        />
       </Routes>
     </AnimatePresence>
   );

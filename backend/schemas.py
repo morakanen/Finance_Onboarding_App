@@ -10,10 +10,14 @@ class UserBase(BaseModel):
     role: Optional[str] = "user"
 
 class UserCreate(UserBase):
+    name: str
+    email: EmailStr
     password: str  # Hash this before saving in DB
 
 class UserResponse(UserBase):
     id: int
+    name: str
+    email: str
 
     class Config:
         from_attributes = True
