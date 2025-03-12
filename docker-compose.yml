@@ -1,26 +1,25 @@
-
 services:
   backend:
     build: ./backend
     container_name: fastapi_backend
     networks:
-      - app_network  # ✅ Add this network
+      - app_network
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - ./backend:/app  # This is okay for dev, but be sure it doesn't override your .env, etc.
     env_file:
-      - ./backend/.env
+      - ./backend/.env  # Loads environment from /backend/.env
     depends_on:
       - postgres
-      - redis
+      - minio
       - mongo
 
   postgres:
     image: postgres:15-alpine
-    container_name: postgres_db
+    container_name: postgres
     networks:
-      - app_network  # ✅ Add this network
+      - app_network
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -31,22 +30,28 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    container_name: redis_cache
-    networks:
-      - app_network  # ✅ Add this network
-    restart: always
+  # Service name is "minio" so Docker's DNS = "minio"
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "6379:6379"
+      - "9000:9000"  # S3-compatible API
+      - "9001:9001"  # MinIO console
     volumes:
-      - redis_data:/data
+      - minio_data:/data
+    restart: unless-stopped
+    networks:
+      - app_network
 
   mongo:
     image: mongo:latest
     container_name: mongo_db
     networks:
-      - app_network  # ✅ Add this network
+      - app_network
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -71,27 +76,25 @@ services:
       - ./frontend:/app
       - /app/node_modules
     
-
   pgadmin:
-      image: dpage/pgadmin4
-      container_name: pgadmin
-      restart: always
-      networks:
-        - app_network  # ✅ Ensure it's in the same network as PostgreSQL
-      ports:
-        - "5050:80"  # ✅ You can access pgAdmin at http://localhost:5050
-      environment:
-        PGADMIN_DEFAULT_EMAIL: admin@example.com  # ✅ Change this as needed
-        PGADMIN_DEFAULT_PASSWORD: admin  # ✅ Change this as needed
-      depends_on:
-        - postgres
-
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    networks:
+      - app_network
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres
 
 networks:
-  app_network:  # ✅ Define the network
+  app_network:
     driver: bridge
 
 volumes:
   postgres_data:
-  redis_data:
+  minio_data:
   mongo_data:

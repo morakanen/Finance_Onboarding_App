@@ -1,19 +1,20 @@
-// src/pages/Authpage.jsx
-// src/pages/Authpage.jsx
 import { useState, useEffect } from "react";
-import { LoginUser, RegisterUser } from "../utils/api"; // Import API calls
+import { LoginUser, RegisterUser } from "../utils/api"; // API Calls
 import useAuthStore from "../store/AuthStore"; // Zustand store
 import { AuthTabs } from "@/components/AuthTabs";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState(""); // For registration
   const [error, setError] = useState("");
-  const { login } = useAuthStore(); // Zustand store
+  const { login, init } = useAuthStore(); // Zustand store
+  const navigate = useNavigate();
 
+  // ✅ Restore session on mount
   useEffect(() => {
-    useAuthStore.getState().init(); // Initialize Zustand state (check for token in localStorage)
+    init();
   }, []);
 
   // ✅ Login Submission (Fixed)
@@ -22,9 +23,9 @@ export default function AuthPage() {
     try {
       const data = await LoginUser(email, password);
       const { access_token, role, user } = data;
-      login({ user, token: access_token, role });
+      login({ user, token: access_token, role }); // Save login data
       alert("Login successful!");
-      window.location.href = role === "admin" ? "/admin/dashboard" : "/dashboard";
+      navigate(role === "admin" ? "/admin/dashboard" : "/dashboard"); // Redirect after login
     } catch (err) {
       setError(err.message);
     }
@@ -34,9 +35,9 @@ export default function AuthPage() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await RegisterUser(name, email, password); // Pass correct order
+      const data = await RegisterUser(name, email, password);
       alert("Registration successful!");
-      window.location.href = "/Auth";
+      navigate("/Auth"); // Redirect to login page after registration
     } catch (err) {
       setError(err.message);
     }

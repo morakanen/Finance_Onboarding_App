@@ -1,19 +1,26 @@
 import uvicorn
-from fastapi import Depends,HTTPException, FastAPI,status
+from fastapi import Depends, HTTPException, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import List,Annotated
+from typing import List, Annotated
 from sqlalchemy.orm import Session
-from database import engine,get_db,mdb
-import models
-from schemas import ClientCreate, ClientResponse,UserCreate,UserResponse
-from passlib.context import CryptContext
-import jwt
 import datetime
+import jwt
+
+# LOCAL IMPORTS
+from database import engine, get_db, mdb
+import models
+from schemas import ClientCreate, ClientResponse, UserCreate, UserResponse
+from passlib.context import CryptContext
+from minio_utils import ensure_bucket_exists
 
 app = FastAPI()
 
+@app.on_event("startup")
+def startup_event():
+    print("[DEBUG] startup_event triggered.")
+    ensure_bucket_exists()
 
 origins = [
     "http://localhost:3000",
@@ -22,24 +29,15 @@ origins = [
     "http://host.docker.internal:3000",
     "http://host.docker.internal:8000",
     "http://localhost:8000"
-
 ]
-
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
-
-
+    allow_headers=["*"]
 )
-
-
-models.Base.metadata.create_all(bind=engine)
-
-
 
 @app.get("/")
 async def root():
@@ -60,7 +58,6 @@ async def test_cors():
 @app.get("/test-mongo")
 async def test_mongo():
     try:
-        # Test if we can list collections
         collections = mdb.list_collection_names()
         return {"message": "Connected to MongoDB!", "collections": collections}
     except Exception as e:
@@ -74,12 +71,9 @@ def create_client(client: ClientCreate, db: Session = Depends(get_db)):
     db.refresh(new_client)
     return new_client
 
-
 # JWT Secret Key
 SECRET_KEY = "your_secret_key"  # Change this in production
 ALGORITHM = "HS256"
-
-
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -89,26 +83,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
-
-# 🔹 Hash password function
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-
-# 🔹 Verify password function
 def verify_password(plain_password, hashed_password) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-
-# 🔹 Generate JWT Token
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token valid for 1 hour
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
-# 🔹 Register User API
 @app.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -121,11 +107,8 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
     return new_user
 
-
-# 🔹 Login API (Returns JWT Token)
 @app.post("/login")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
@@ -133,12 +116,17 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token({"sub": user.email, "role": user.role})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role
+        }
+    }
 
-    return {"access_token": token, "token_type": "bearer",
-            "user": {"id": user.id, "name": user.name, "email": user.email, "role": user.role}}
-
-
-# 🔹 Get Current User API (Protected)
 @app.get("/me", response_model=UserResponse)
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
@@ -153,11 +141,6 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-
+# Only one "if __name__ == '__main__':"
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
