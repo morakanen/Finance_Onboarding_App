@@ -3,6 +3,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
+import { useLocation } from "react-router-dom";
 
 // Shadcn UI form components
 import {
@@ -20,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
+
 
 // 1️⃣ Define your validation schema with Zod:
 const clientDetailsSchema = z.object({
@@ -74,6 +77,7 @@ const clientDetailsSchema = z.object({
 });
 
 function ClientDetailsForm() {
+  const location = useLocation();
   const navigate = useNavigate();
 
   // 2️⃣ Setup your react-hook-form with the Zod resolver:
@@ -145,6 +149,7 @@ function ClientDetailsForm() {
 
   return (
     <div className="mx-auto max-w-5xl w-full">
+      <OnboardingBreadcrumbs />
       <Card>
         <CardHeader>
           <h2 className="text-xl font-semibold">Client Details</h2>

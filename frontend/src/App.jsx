@@ -17,6 +17,8 @@ import AuthPage from "./Pages/Authpage";
 import Dashboard from "./Pages/Dashboard";
 import AdminDashboard from "./Pages/AdminDashboard";
 import ClientDetailsForm from "./Pages/Onboard_Forms/ClientDetailsForm";
+import TradingAsForm from "./Pages/Onboard_Forms/TradingAsForm";
+
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -68,6 +70,19 @@ function AnimatedRoutes() {
             user ? <PageWrapper><ClientDetailsForm /></PageWrapper> : <Navigate to="/auth" />
           }
         />
+
+        <Route
+          path="/onboarding/next-step"
+          element={
+            user ? <PageWrapper><ClientDetailsForm /></PageWrapper> : <Navigate to="/auth" />
+          }
+        />
+
+        <Route path="/onboarding/trading-as" 
+        element={
+          user ? <PageWrapper><TradingAsForm /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
       </Routes>
     </AnimatePresence>
   );
