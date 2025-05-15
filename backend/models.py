@@ -17,11 +17,14 @@ class RoleEnum(str, enum.Enum):
 # User model
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(SQLAlchemyEnum(RoleEnum), default=RoleEnum.user)
+    
+    # Relationships
+    applications = relationship("Application", back_populates="user", lazy="joined")
 
 
 # Client model
@@ -77,17 +80,34 @@ class RiskAssessment(Base):
     details = Column(JSON, nullable=True)
 
 
+# Application model
+class Application(Base):
+    __tablename__ = "applications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    status = Column(String, server_default="in_progress")
+    
+    # Relationships
+    form_progress = relationship("FormProgress", back_populates="application", lazy="joined")
+    user = relationship("User", lazy="joined")
+
+
 # ✅ Form Progress Model (Allows Saving Progress for Onboarding Forms)
 class FormProgress(Base):
     __tablename__ = "form_progress"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"))
+    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"), nullable=True)
+    application_id = Column(UUID(as_uuid=True), ForeignKey("applications.id"), nullable=True)
     step = Column(String, nullable=False)  # ✅ Step the user is on
     data = Column(JSON, nullable=True)  # ✅ Store form data
     last_updated = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     # Relationship with Client
     client = relationship("Client", back_populates="form_progress", lazy="joined")
+    # Relationship with Application
+    application = relationship("Application", back_populates="form_progress", lazy="joined")
 
 

@@ -17,7 +17,23 @@ import AuthPage from "./Pages/Authpage";
 import Dashboard from "./Pages/Dashboard";
 import AdminDashboard from "./Pages/AdminDashboard";
 import ClientDetailsForm from "./Pages/Onboard_Forms/ClientDetailsForm";
+import ClientDetailsFormWrapper from "./Pages/Onboard_Forms/ClientDetailsFormWrapper";
 import TradingAsForm from "./Pages/Onboard_Forms/TradingAsForm";
+import TradingAsFormWrapper from "./Pages/Onboard_Forms/TradingAsFormWrapper";
+import ReferralsForm from "./Pages/Onboard_Forms/ReferralsForm";
+import ReferralsFormWrapper from "./Pages/Onboard_Forms/ReferralsFormWrapper";
+import AssociationsForm from "./Pages/Onboard_Forms/Associations";
+import AssociationsFormWrapper from "./Pages/Onboard_Forms/AssociationsFormWrapper";
+import AssignmentsForm from "./Pages/Onboard_Forms/Assignments";
+import AssignmentsFormWrapper from "./Pages/Onboard_Forms/AssignmentsFormWrapper";
+import KYCForm from "./Pages/Onboard_Forms/KYCform";
+import KYCFormWrapper from "./Pages/Onboard_Forms/KYCFormWrapper";
+import RiskAssessmentForm from "./Pages/Onboard_Forms/RiskAssessmentForm";
+import RiskAssessmentFormWrapper from "./Pages/Onboard_Forms/RiskAssessmentFormWrapper";
+import NonAuditForm from "./Pages/Onboard_Forms/NonAuditForm";
+import NonAuditFormWrapper from "./Pages/Onboard_Forms/NonAuditFormWrapper";
+import FinaliseForm from "./Pages/Onboard_Forms/FinaliseForm";
+import FinaliseFormWrapper from "./Pages/Onboard_Forms/FinaliseFormWrapper";
 
 
 const pageVariants = {
@@ -64,12 +80,19 @@ function AnimatedRoutes() {
           element={role === "admin" ? <PageWrapper><AdminDashboard /></PageWrapper> : <Navigate to="/auth" />}
         />
 
-        <Route
-          path="/onboarding/client-details"
-          element={
-            user ? <PageWrapper><ClientDetailsForm /></PageWrapper> : <Navigate to="/auth" />
-          }
-        />
+
+<Route
+  path="/onboarding/client-details/:applicationId"
+  element={
+    user ? (
+      <PageWrapper>
+        <ClientDetailsFormWrapper />
+      </PageWrapper>
+    ) : (
+      <Navigate to="/auth" />
+    )
+  }
+/>
 
         <Route
           path="/onboarding/next-step"
@@ -78,9 +101,44 @@ function AnimatedRoutes() {
           }
         />
 
-        <Route path="/onboarding/trading-as" 
+        <Route path="/onboarding/trading-as/:applicationId" 
         element={
-          user ? <PageWrapper><TradingAsForm /></PageWrapper>
+          user ? <PageWrapper><TradingAsFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/referrals/:applicationId"
+        element={
+          user ? <PageWrapper><ReferralsFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/associations/:applicationId"
+        element={
+          user ? <PageWrapper><AssociationsFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/assignments/:applicationId"
+        element={
+          user ? <PageWrapper><AssignmentsFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/kyc/:applicationId"
+        element={
+          user ? <PageWrapper><KYCFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/risk-assessment/:applicationId"
+        element={
+          user ? <PageWrapper><RiskAssessmentFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/non-audit/:applicationId"
+        element={
+          user ? <PageWrapper><NonAuditFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/onboarding/finalise/:applicationId"
+        element={
+          user ? <PageWrapper><FinaliseFormWrapper /></PageWrapper>
           : <Navigate to="/auth" />} />
 
       </Routes>

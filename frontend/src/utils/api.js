@@ -36,6 +36,28 @@ export const RegisterUser = async (name, email, password) => {
   }
 };
 
+// ✅ Save Client Details Form Progress
+export const saveClientDetails = async (applicationId, step, data) => {
+  try {
+    // Ensure applicationId is a valid UUID string
+    if (!applicationId || typeof applicationId !== 'string' || !applicationId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      throw new Error('Invalid applicationId: Must be a valid UUID');
+    }
+
+    const payload = {
+      application_id: applicationId,
+      step,
+      data,
+    };
+    console.log("[DEBUG] Payload sent to /form-progress:", payload);
+    const response = await api.post("/form-progress", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving client details:", error);
+    throw new Error(error.response?.data?.detail || "Failed to save client details");
+  }
+};
+
 // ✅ Get Current User API
 export const getCurrentUser = async (token) => {
   try {

@@ -12,10 +12,15 @@ import jwt
 from database import engine, get_db, mdb
 import models
 from schemas import ClientCreate, ClientResponse, UserCreate, UserResponse
+from uuid import UUID
 from passlib.context import CryptContext
 from minio_utils import ensure_bucket_exists
+from routes import clients as clients_routes
+from routes import applications as applications_routes
 
 app = FastAPI()
+app.include_router(clients_routes.router)
+app.include_router(applications_routes.router)
 
 @app.on_event("startup")
 def startup_event():

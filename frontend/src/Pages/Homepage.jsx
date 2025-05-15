@@ -10,14 +10,14 @@ const HomePage = () => {
         Get started with your onboarding process or continue from where you left off.
       </p>
       <div className="flex space-x-4">
-        <Link to="/onboarding/1">
+        <Link to="/onboarding/client-details">
           <Button className="bg-orange-500 text-white px-6 py-3 rounded-lg border-2 border-orange-400 hover:bg-orange-600">
             Start New Form
-          </Button>
+          </Button> 
         </Link>
-        <Link to="/onboarding/continue">
+        <Link to="/dashboard">
           <Button className="bg-transparent text-orange-500 px-6 py-3 rounded-lg border-2 border-orange-500 hover:bg-orange-500 hover:text-white">
-            Continue Existing Form
+            View Dashboard
           </Button>
         </Link>
       </div>

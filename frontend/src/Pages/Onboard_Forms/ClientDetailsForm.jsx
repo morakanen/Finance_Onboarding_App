@@ -1,9 +1,8 @@
 import React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import * as z from "zod";
-import { useLocation } from "react-router-dom";
 
 // Shadcn UI form components
 import {
@@ -22,6 +21,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
+import { saveClientDetails } from "@/utils/api";
+import useAuthStore from "@/store/AuthStore";
 
 
 // 1️⃣ Define your validation schema with Zod:
@@ -76,7 +77,7 @@ const clientDetailsSchema = z.object({
   mobile: z.string().optional(),
 });
 
-function ClientDetailsForm() {
+function ClientDetailsForm({ applicationId }) { // applicationId now comes from URL params via wrapper
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -138,13 +139,14 @@ function ClientDetailsForm() {
   });
 
   // 3️⃣ Handle form submission:
-  function onSubmit(values) {
-    console.log("Client Details:", values);
-
-    // e.g. Save to DB or store in global state here
-
-    // Then navigate to your next step:
-    navigate("/onboarding/next-step"); 
+  async function onSubmit(values) {
+    try {
+      await saveClientDetails(applicationId, "client-details", values);
+      // Navigate to the next step with applicationId in the URL
+      navigate(`/onboarding/trading-as/${applicationId}`);
+    } catch (error) {
+      alert(error.message);
+    }
   }
 
   return (
@@ -175,14 +177,14 @@ function ClientDetailsForm() {
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger data-testid="select-title" id="debug-title-select">
                             <SelectValue placeholder="Select Title" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Mr">Mr</SelectItem>
-                            <SelectItem value="Mrs">Mrs</SelectItem>
-                            <SelectItem value="Ms">Ms</SelectItem>
-                            <SelectItem value="Dr">Dr</SelectItem>
+                            <SelectItem data-testid="select-title-option-Mr" value="Mr">Mr</SelectItem>
+                            <SelectItem data-testid="select-title-option-Mrs" value="Mrs">Mrs</SelectItem>
+                            <SelectItem data-testid="select-title-option-Ms" value="Ms">Ms</SelectItem>
+                            <SelectItem data-testid="select-title-option-Dr" value="Dr">Dr</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -263,13 +265,13 @@ function ClientDetailsForm() {
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger data-testid="select-gender">
                             <SelectValue placeholder="Select Gender" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem data-testid="select-gender-option-male" value="male">Male</SelectItem>
+                            <SelectItem data-testid="select-gender-option-female" value="female">Female</SelectItem>
+                            <SelectItem data-testid="select-gender-option-other" value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -451,9 +453,9 @@ function ClientDetailsForm() {
                             <SelectValue placeholder="Select Tax Type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="selfAssessment">Self Assessment</SelectItem>
-                            <SelectItem value="corporationTax">Corporation Tax</SelectItem>
-                            <SelectItem value="partnership">Partnership</SelectItem>
+                            <SelectItem data-testid="select-taxType-option-selfAssessment" value="selfAssessment">Self Assessment</SelectItem>
+                            <SelectItem data-testid="select-taxType-option-corporationTax" value="corporationTax">Corporation Tax</SelectItem>
+                            <SelectItem data-testid="select-taxType-option-partnership" value="partnership">Partnership</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -477,8 +479,8 @@ function ClientDetailsForm() {
                             <SelectValue placeholder="Select Option" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="yes">Yes</SelectItem>
-                            <SelectItem value="no">No</SelectItem>
+                            <SelectItem data-testid="select-taxInvestigationCover-option-yes" value="yes">Yes</SelectItem>
+                            <SelectItem data-testid="select-taxInvestigationCover-option-no" value="no">No</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -515,11 +517,11 @@ function ClientDetailsForm() {
                           defaultValue={field.value}
                         >
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" />
+                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-yes" value="yes" />
                             <Label>Yes</Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" />
+                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-no" value="no" />
                             <Label>No</Label>
                           </FormItem>
                         </RadioGroup>
@@ -543,11 +545,11 @@ function ClientDetailsForm() {
                           defaultValue={field.value}
                         >
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" />
+                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-yes" value="yes" />
                             <Label>Yes</Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" />
+                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-no" value="no" />
                             <Label>No</Label>
                           </FormItem>
                         </RadioGroup>
@@ -575,11 +577,11 @@ function ClientDetailsForm() {
                           defaultValue={field.value}
                         >
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" />
+                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-yes" value="yes" />
                             <Label>Yes</Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" />
+                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-no" value="no" />
                             <Label>No</Label>
                           </FormItem>
                         </RadioGroup>

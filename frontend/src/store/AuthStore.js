@@ -13,7 +13,7 @@ const useAuthStore = create((set) => ({
     localStorage.setItem("role", userInfo.role);
 
     set({
-      user: userInfo.user,
+      user: userInfo.user, // user.id is a UUID
       token: userInfo.token,
       role: userInfo.role,
       loading: false,
@@ -42,7 +42,7 @@ const useAuthStore = create((set) => ({
 
     if (token && user) {
       set({
-        user: JSON.parse(user),
+        user: JSON.parse(user), // user.id is a UUID
         token,
         role,
         loading: false,

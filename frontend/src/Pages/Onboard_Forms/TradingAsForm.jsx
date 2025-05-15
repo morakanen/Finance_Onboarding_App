@@ -23,26 +23,79 @@ import { Textarea } from "@/components/ui/textarea";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 
 const tradingAsSchema = z.object({
-  businessType: z.string().min(1),
+  contactType: z.string().min(1, "Contact type is required"),
+  businessType: z.string().min(1, "Business type is required"),
   companyName: z.string().optional(),
   registrationNumber: z.string().optional(),
 });
 
-export default function TradingAsForm() {
+import { useEffect, useRef } from "react";
+
+export default function TradingAsForm({ applicationId }) {
   const navigate = useNavigate();
   const form = useForm({
     resolver: zodResolver(tradingAsSchema),
     defaultValues: {
+      contactType: "",
       businessType: "",
       companyName: "",
       registrationNumber: "",
     },
   });
 
+  // --- AUTOSAVE/LOAD LOGIC ---
+  const step = "trading-as";
+  const autosaveTimeout = useRef();
+  useEffect(() => {
+    if (!applicationId) return;
+    fetch(`/api/form-progress/${applicationId}/${step}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.data) {
+          form.reset(data.data);
+        }
+      });
+    // eslint-disable-next-line
+  }, [applicationId]);
 
-  const onSubmit = (values) => {
-    console.log("Trading As:", values);
-    navigate("/onboarding/referrals");
+  useEffect(() => {
+    if (!applicationId) return;
+    const subscription = form.watch((values) => {
+      if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
+      autosaveTimeout.current = setTimeout(() => {
+        fetch("/api/form-progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            application_id: applicationId,
+            step,
+            data: values,
+          }),
+        });
+      }, 800);
+    });
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line
+  }, [applicationId, form.watch]);
+
+  const onSubmit = async (values) => {
+    try {
+      // Use the saveClientDetails API function to save data
+      await fetch("/api/form-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          application_id: applicationId,
+          step,
+          data: values,
+        }),
+      });
+      // Navigate to the next form with applicationId
+      navigate(`/onboarding/referrals/${applicationId}`);
+    } catch (error) {
+      console.error("Error saving trading as form:", error);
+      alert("Failed to save form data");
+    }
   };
 
   return (
@@ -60,18 +113,78 @@ export default function TradingAsForm() {
             <CardContent className="space-y-4">
               <FormField
                 control={form.control}
+                name="contactType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Type*</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Contact Type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="individual">Individual</SelectItem>
+                        <SelectItem value="company">Company</SelectItem>
+                        <SelectItem value="partnership">Partnership</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="businessType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Business Type</FormLabel>
+                    <FormLabel>Business Type*</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Business Type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="sole_trader">Sole Trader</SelectItem>
+                        <SelectItem value="limited_company">Limited Company</SelectItem>
+                        <SelectItem value="partnership">Partnership</SelectItem>
+                        <SelectItem value="llp">LLP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., Sole Trader" />
+                      <Input {...field} placeholder="Enter company name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* Add other fields */}
+
+              <FormField
+                control={form.control}
+                name="registrationNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reg No</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter registration number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button
