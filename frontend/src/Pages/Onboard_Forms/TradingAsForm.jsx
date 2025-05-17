@@ -1,9 +1,11 @@
 // TradingAsForm.jsx
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import SaveProgressButton from "../../components/SaveProgressButton";
 // Shadcn UI form components
 import {
   Form,
@@ -29,8 +31,6 @@ const tradingAsSchema = z.object({
   registrationNumber: z.string().optional(),
 });
 
-import { useEffect, useRef } from "react";
-
 export default function TradingAsForm({ applicationId }) {
   const navigate = useNavigate();
   const form = useForm({
@@ -43,27 +43,27 @@ export default function TradingAsForm({ applicationId }) {
     },
   });
 
-  // --- AUTOSAVE/LOAD LOGIC ---
+  // --- FORM STEP IDENTIFIER ---
   const step = "trading-as";
   const autosaveTimeout = useRef();
+  
+  // Load saved form data when component mounts
   useEffect(() => {
     if (!applicationId) return;
-    fetch(`/api/form-progress/${applicationId}/${step}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.data) {
-          form.reset(data.data);
-        }
-      });
-    // eslint-disable-next-line
-  }, [applicationId]);
+    loadFormData(step, form.reset, applicationId);
+  }, [applicationId, form]);
+  
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
+    return await saveFormProgress(step, values, applicationId);
+  };
 
   useEffect(() => {
     if (!applicationId) return;
     const subscription = form.watch((values) => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
       autosaveTimeout.current = setTimeout(() => {
-        fetch("/api/form-progress", {
+        fetch("http://localhost:8000/form-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -71,7 +71,8 @@ export default function TradingAsForm({ applicationId }) {
             step,
             data: values,
           }),
-        });
+        })
+        .catch(err => console.error('Error autosaving form data:', err));
       }, 800);
     });
     return () => subscription.unsubscribe();
@@ -80,20 +81,14 @@ export default function TradingAsForm({ applicationId }) {
 
   const onSubmit = async (values) => {
     try {
-      // Use the saveClientDetails API function to save data
-      await fetch("/api/form-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          application_id: applicationId,
-          step,
-          data: values,
-        }),
-      });
-      // Navigate to the next form with applicationId
-      navigate(`/onboarding/referrals/${applicationId}`);
+      const saved = await saveFormData(values);
+      if (saved) {
+        // Navigate to the next form with applicationId
+        const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId');
+        navigate(`/onboarding/referrals/${effectiveAppId}`);
+      }
     } catch (error) {
-      console.error("Error saving trading as form:", error);
+      console.error("Error saving trading-as form:", error);
       alert("Failed to save form data");
     }
   };
@@ -194,7 +189,13 @@ export default function TradingAsForm({ applicationId }) {
               >
                 Back
               </Button>
-              <Button type="submit">Continue</Button>
+              <div className="flex gap-2">
+                <SaveProgressButton 
+                  onSave={() => saveFormData(form.getValues())}
+                  variant="secondary"
+                />
+                <Button type="submit">Continue</Button>
+              </div>
             </CardFooter>
           </form>
         </Form>

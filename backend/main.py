@@ -19,8 +19,10 @@ from routes import clients as clients_routes
 from routes import applications as applications_routes
 
 app = FastAPI()
-app.include_router(clients_routes.router)
-app.include_router(applications_routes.router)
+
+# Important: Explicitly add tags and prefix to the routers
+app.include_router(clients_routes.router, tags=["clients"])
+app.include_router(applications_routes.router, tags=["applications"])
 
 @app.on_event("startup")
 def startup_event():

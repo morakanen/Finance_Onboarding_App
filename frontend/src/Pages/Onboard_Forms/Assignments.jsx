@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import SaveProgressButton from "../../components/SaveProgressButton";
 import {
   Form,
   FormField,
@@ -34,8 +36,6 @@ const assignmentsSchema = z.object({
   nonRecurringFees: z.string().min(1, "Non-recurring fees are required"),
 });
 
-import { useEffect, useRef } from "react";
-
 export default function AssignmentsForm({ applicationId }) {
   const navigate = useNavigate();
   const form = useForm({
@@ -47,28 +47,27 @@ export default function AssignmentsForm({ applicationId }) {
     },
   });
 
-  // --- AUTOSAVE/LOAD LOGIC ---
+  // --- FORM STEP IDENTIFIER ---
   const step = "assignments";
   const autosaveTimeout = useRef();
   
+  // Load saved form data when component mounts
   useEffect(() => {
     if (!applicationId) return;
-    fetch(`/api/form-progress/${applicationId}/${step}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.data) {
-          form.reset(data.data);
-        }
-      });
-    // eslint-disable-next-line
-  }, [applicationId]);
+    loadFormData(step, form.reset, applicationId);
+  }, [applicationId, form]);
+  
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
+    return await saveFormProgress(step, values, applicationId);
+  };
 
   useEffect(() => {
     if (!applicationId) return;
     const subscription = form.watch((values) => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
       autosaveTimeout.current = setTimeout(() => {
-        fetch("/api/form-progress", {
+        fetch("http://localhost:8000/form-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -76,7 +75,8 @@ export default function AssignmentsForm({ applicationId }) {
             step,
             data: values,
           }),
-        });
+        })
+        .catch(err => console.error('Error autosaving form data:', err));
       }, 800);
     });
     return () => subscription.unsubscribe();
@@ -85,18 +85,12 @@ export default function AssignmentsForm({ applicationId }) {
 
   const onSubmit = async (values) => {
     try {
-      // Save form data to the database
-      await fetch("/api/form-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          application_id: applicationId,
-          step,
-          data: values,
-        }),
-      });
-      // Navigate to the next form with applicationId
-      navigate(`/onboarding/kyc/${applicationId}`);
+      const saved = await saveFormData(values);
+      if (saved) {
+        // Navigate to the next form with applicationId
+        const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId');
+        navigate(`/onboarding/kyc/${effectiveAppId}`);
+      }
     } catch (error) {
       console.error("Error saving assignments form:", error);
       alert("Failed to save form data");
@@ -183,7 +177,13 @@ export default function AssignmentsForm({ applicationId }) {
               >
                 Previous
               </Button>
-              <Button type="submit">Next</Button>
+              <div className="flex gap-2">
+                <SaveProgressButton 
+                  onSave={() => saveFormData(form.getValues())}
+                  variant="secondary"
+                />
+                <Button type="submit">Next</Button>
+              </div>
             </CardFooter>
           </form>
         </Form>

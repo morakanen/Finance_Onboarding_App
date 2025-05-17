@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import SaveProgressButton from "../../components/SaveProgressButton";
 import {
   Form,
   FormField,
@@ -28,8 +30,6 @@ const finaliseSchema = z.object({
   mlroSignoffDate: z.string().min(1, "Required"),
 });
 
-import { useEffect, useRef } from "react";
-
 export default function FinaliseForm({ applicationId }) {
   const navigate = useNavigate();
   const form = useForm({
@@ -43,21 +43,20 @@ export default function FinaliseForm({ applicationId }) {
     },
   });
 
-  // --- AUTOSAVE/LOAD LOGIC ---
+  // --- FORM STEP IDENTIFIER ---
   const step = "finalise";
   const autosaveTimeout = useRef();
-  // Load progress on mount
+  
+  // Load saved form data when component mounts
   useEffect(() => {
     if (!applicationId) return;
-    fetch(`/api/form-progress/${applicationId}/${step}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.data) {
-          form.reset(data.data);
-        }
-      });
-    // eslint-disable-next-line
-  }, [applicationId]);
+    loadFormData(step, form.reset, applicationId);
+  }, [applicationId, form]);
+  
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
+    return await saveFormProgress(step, values, applicationId);
+  };
 
   // Autosave on form change (debounced)
   useEffect(() => {
@@ -65,7 +64,7 @@ export default function FinaliseForm({ applicationId }) {
     const subscription = form.watch((values) => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
       autosaveTimeout.current = setTimeout(() => {
-        fetch("/api/form-progress", {
+        fetch("http://localhost:8000/form-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -73,7 +72,8 @@ export default function FinaliseForm({ applicationId }) {
             step,
             data: values,
           }),
-        });
+        })
+        .catch(err => console.error('Error autosaving form data:', err));
       }, 800); // 800ms debounce
     });
     return () => subscription.unsubscribe();
@@ -82,19 +82,12 @@ export default function FinaliseForm({ applicationId }) {
 
   const onSubmit = async (values) => {
     try {
-      // Save form data to the database
-      await fetch("/api/form-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          application_id: applicationId,
-          step,
-          data: values,
-        }),
-      });
-      // Navigate to the dashboard after completing all forms
-      navigate('/dashboard');
-      alert("Onboarding process completed successfully!");
+      const saved = await saveFormData(values);
+      if (saved) {
+        // Navigate to the dashboard after completing all forms
+        navigate('/dashboard');
+        alert("Onboarding process completed successfully!");
+      }
     } catch (error) {
       console.error("Error saving finalise form:", error);
       alert("Failed to save form data");
@@ -200,9 +193,15 @@ export default function FinaliseForm({ applicationId }) {
                   Save and Exit
                 </Button>
               </div>
-              <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                Submit for review
-              </Button>
+              <div className="flex gap-2">
+                <SaveProgressButton 
+                  onSave={() => saveFormData(form.getValues())}
+                  variant="secondary"
+                />
+                <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                  Submit for review
+                </Button>
+              </div>
             </CardFooter>
           </form>
         </Form>

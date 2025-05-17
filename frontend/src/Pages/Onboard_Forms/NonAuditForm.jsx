@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import SaveProgressButton from "../../components/SaveProgressButton";
 import {
   Form,
   FormField,
@@ -43,8 +45,6 @@ const nonAuditSchema = z.object({
     .length(4),
 });
 
-import { useEffect, useRef } from "react";
-
 export default function NonAuditForm({ applicationId }) {
   const navigate = useNavigate();
   const form = useForm({
@@ -58,27 +58,27 @@ export default function NonAuditForm({ applicationId }) {
     name: "answers",
   });
 
-  // --- AUTOSAVE/LOAD LOGIC ---
+  // --- FORM STEP IDENTIFIER ---
   const step = "non-audit";
   const autosaveTimeout = useRef();
+  
+  // Load saved form data when component mounts
   useEffect(() => {
     if (!applicationId) return;
-    fetch(`/api/form-progress/${applicationId}/${step}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.data) {
-          form.reset(data.data);
-        }
-      });
-    // eslint-disable-next-line
-  }, [applicationId]);
+    loadFormData(step, form.reset, applicationId);
+  }, [applicationId, form]);
+  
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
+    return await saveFormProgress(step, values, applicationId);
+  };
 
   useEffect(() => {
     if (!applicationId) return;
     const subscription = form.watch((values) => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
       autosaveTimeout.current = setTimeout(() => {
-        fetch("/api/form-progress", {
+        fetch("http://localhost:8000/form-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -86,7 +86,8 @@ export default function NonAuditForm({ applicationId }) {
             step,
             data: values,
           }),
-        });
+        })
+        .catch(err => console.error('Error autosaving form data:', err));
       }, 800);
     });
     return () => subscription.unsubscribe();
@@ -95,18 +96,12 @@ export default function NonAuditForm({ applicationId }) {
 
   const onSubmit = async (values) => {
     try {
-      // Save form data to the database
-      await fetch("/api/form-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          application_id: applicationId,
-          step,
-          data: values,
-        }),
-      });
-      // Navigate to the next form with applicationId
-      navigate(`/onboarding/finalise/${applicationId}`);
+      const saved = await saveFormData(values);
+      if (saved) {
+        // Navigate to the next form with applicationId
+        const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId');
+        navigate(`/onboarding/finalise/${effectiveAppId}`);
+      }
     } catch (error) {
       console.error("Error saving non-audit form:", error);
       alert("Failed to save form data");
@@ -187,7 +182,13 @@ export default function NonAuditForm({ applicationId }) {
               >
                 Previous
               </Button>
-              <Button type="submit">Next</Button>
+              <div className="flex gap-2">
+                <SaveProgressButton 
+                  onSave={() => saveFormData(form.getValues())}
+                  variant="secondary"
+                />
+                <Button type="submit">Next</Button>
+              </div>
             </CardFooter>
           </form>
         </Form>

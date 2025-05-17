@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useLocation } from "react-router-dom";
 import * as z from "zod";
+import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import SaveProgressButton from "../../components/SaveProgressButton";
 
 // Shadcn UI form components
 import {
@@ -138,14 +140,36 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
     name: "isBillingSameAddress",
   });
 
+  // Define step name for this form
+  const step = "client-details";
+  const autosaveTimeout = useRef();
+  
+  // Load saved form data when component mounts
+  useEffect(() => {
+    if (!applicationId) return;
+    loadFormData(step, form.reset, applicationId);
+  }, [applicationId, form]);
+
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
+    return await saveFormProgress(step, values, applicationId);
+  };
+
   // 3️⃣ Handle form submission:
   async function onSubmit(values) {
     try {
-      await saveClientDetails(applicationId, "client-details", values);
-      // Navigate to the next step with applicationId in the URL
-      navigate(`/onboarding/trading-as/${applicationId}`);
+      console.log("Submitting form with applicationId:", applicationId);
+      console.log("Form values:", values);
+      
+      const saved = await saveFormData(values);
+      if (saved) {
+        // Navigate to the next form
+        const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId');
+        navigate(`/onboarding/trading-as/${effectiveAppId}`);
+      }
     } catch (error) {
-      alert(error.message);
+      console.error("Error submitting form:", error);
+      alert("There was an error submitting the form. Please try again.");
     }
   }
 
@@ -795,8 +819,12 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
             </CardContent>
 
             {/* Submit */}
-            <CardFooter>
-              <Button type="submit" className="w-full">
+            <CardFooter className="flex justify-between">
+              <SaveProgressButton 
+                onSave={() => saveFormData(form.getValues())}
+                variant="secondary"
+              />
+              <Button type="submit" className="ml-auto">
                 Save & Continue
               </Button>
             </CardFooter>

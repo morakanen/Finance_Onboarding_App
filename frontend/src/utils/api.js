@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "/api"; // ✅ Correct: Nginx will forward to FastAPI
+const API_BASE_URL = "http://localhost:8000"; // Updated to direct backend URL
 
 const api = axios.create({
   baseURL: API_BASE_URL,

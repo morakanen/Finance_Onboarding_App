@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import SaveProgressButton from "../../components/SaveProgressButton";
 import {
   Form,
   FormField,
@@ -52,7 +54,6 @@ const riskSchema = z.object({
     .length(7),
 });
 
-import { useEffect, useRef } from "react";
 
 export default function RiskAssessmentForm({ applicationId }) {
   const navigate = useNavigate();
@@ -67,27 +68,27 @@ export default function RiskAssessmentForm({ applicationId }) {
     name: "answers",
   });
 
-  // --- AUTOSAVE/LOAD LOGIC ---
+  // --- FORM STEP IDENTIFIER ---
   const step = "risk-assessment";
   const autosaveTimeout = useRef();
+  
+  // Load saved form data when component mounts
   useEffect(() => {
     if (!applicationId) return;
-    fetch(`/api/form-progress/${applicationId}/${step}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.data) {
-          form.reset(data.data);
-        }
-      });
-    // eslint-disable-next-line
-  }, [applicationId]);
+    loadFormData(step, form.reset, applicationId);
+  }, [applicationId, form]);
+  
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
+    return await saveFormProgress(step, values, applicationId);
+  };
 
   useEffect(() => {
     if (!applicationId) return;
     const subscription = form.watch((values) => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
       autosaveTimeout.current = setTimeout(() => {
-        fetch("/api/form-progress", {
+        fetch("http://localhost:8000/form-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -95,7 +96,8 @@ export default function RiskAssessmentForm({ applicationId }) {
             step,
             data: values,
           }),
-        });
+        })
+        .catch(err => console.error('Error autosaving form data:', err));
       }, 800);
     });
     return () => subscription.unsubscribe();
@@ -111,19 +113,13 @@ export default function RiskAssessmentForm({ applicationId }) {
       
       const formData = form.getValues();
       
-      // Save form data to the database
-      await fetch("/api/form-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          application_id: applicationId,
-          step,
-          data: formData,
-        }),
-      });
-      
-      // Navigate to the next form with applicationId
-      navigate(`/onboarding/non-audit/${applicationId}`);
+      // Save form data using our utility function
+      const saved = await saveFormData(formData);
+      if (saved) {
+        // Navigate to the next form with applicationId
+        const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId');
+        navigate(`/onboarding/non-audit/${effectiveAppId}`);
+      }
     } catch (error) {
       console.error("Error saving risk assessment form:", error);
       alert("Failed to save form data");
@@ -214,7 +210,13 @@ export default function RiskAssessmentForm({ applicationId }) {
               >
                 Previous
               </Button>
-              <Button type="submit">Next</Button>
+              <div className="flex gap-2">
+                <SaveProgressButton 
+                  onSave={() => saveFormData(form.getValues())}
+                  variant="secondary"
+                />
+                <Button type="submit">Next</Button>
+              </div>
             </CardFooter>
           </form>
         </Form>

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import SaveProgressButton from "../../components/SaveProgressButton";
 import {
   Form,
   FormField,
@@ -30,8 +31,6 @@ const associationSchema = z.object({
     .max(MAX_ASSOCIATIONS, `You can add up to ${MAX_ASSOCIATIONS} relationships`),
 });
 
-import { useEffect, useRef } from "react";
-
 export default function AssociationsForm({ applicationId }) {
   const navigate = useNavigate();
   const form = useForm({
@@ -53,54 +52,120 @@ export default function AssociationsForm({ applicationId }) {
   const autosaveTimeout = useRef();
   
   useEffect(() => {
-    if (!applicationId) return;
-    fetch(`/api/form-progress/${applicationId}/${step}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.data) {
-          form.reset(data.data);
+    // If applicationId from URL params is missing, try to get from localStorage
+    const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId') || "682af344-4b55-45f9-ac2e-6f72735d3ea4";
+    
+    if (!effectiveAppId) {
+      console.error(`No application ID available for ${step} form`);
+      return;
+    }
+    
+    console.log(`Loading ${step} form data for application ID: ${effectiveAppId}`);
+    
+    fetch(`http://localhost:8000/api/form-progress/${effectiveAppId}/${step}`)
+      .then(res => {
+        console.log(`${step} form data response status:`, res.status);
+        if (!res.ok) {
+          if (res.status === 404) {
+            console.log(`No data found for ${step}, this is normal for a new form`);
+            return null;
+          }
+          console.error(`Error fetching ${step} data:`, res.status, res.statusText);
+          return null;
         }
-      });
+        return res.json();
+      })
+      .then(data => {
+        console.log(`${step} form data retrieved:`, data);
+        if (data && data.data) {
+          console.log(`Resetting ${step} form with data:`, data.data);
+          form.reset(data.data);
+        } else {
+          console.log(`No saved data found for ${step}`);
+        }
+      })
+      .catch(err => console.error(`Error loading ${step} form data:`, err));
     // eslint-disable-next-line
   }, [applicationId]);
 
   useEffect(() => {
-    if (!applicationId) return;
+    // If applicationId from URL params is missing, try to get from localStorage
+    const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId') || "682af344-4b55-45f9-ac2e-6f72735d3ea4";
+    
+    if (!effectiveAppId) {
+      console.error(`No application ID available for ${step} form autosave`);
+      return;
+    }
+    
     const subscription = form.watch((values) => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
       autosaveTimeout.current = setTimeout(() => {
-        fetch("/api/form-progress", {
+        console.log(`Autosaving ${step} form data for application ID: ${effectiveAppId}`);
+        fetch("http://localhost:8000/api/form-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            application_id: applicationId,
+            application_id: effectiveAppId,
             step,
             data: values,
           }),
-        });
+        })
+        .then(res => {
+          console.log(`Autosave response for ${step}:`, res.status);
+          return res.ok ? res.json() : null;
+        })
+        .catch(err => console.error(`Error autosaving ${step} form data:`, err));
       }, 800);
     });
     return () => subscription.unsubscribe();
     // eslint-disable-next-line
   }, [applicationId, form.watch]);
 
-  const onSubmit = async (values) => {
+  // Function to save form data without navigating
+  const saveFormData = async (values) => {
     try {
+      // Get the effective application ID
+      const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId') || "682af344-4b55-45f9-ac2e-6f72735d3ea4";
+      
+      if (!effectiveAppId) {
+        console.error(`No application ID available for ${step} form save`);
+        alert("No application ID found. Please return to dashboard and try again.");
+        return false;
+      }
+      
+      console.log(`Saving ${step} form data for application ID: ${effectiveAppId}`);
+      
       // Save form data to the database
-      await fetch("/api/form-progress", {
+      const response = await fetch("http://localhost:8000/api/form-progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          application_id: applicationId,
+          application_id: effectiveAppId,
           step,
           data: values,
         }),
       });
-      // Navigate to the next form with applicationId
-      navigate(`/onboarding/assignments/${applicationId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      
+      console.log(`Successfully saved ${step} form data`);
+      return true;
     } catch (error) {
-      console.error("Error saving associations form:", error);
-      alert("Failed to save form data");
+      console.error(`Error saving ${step} form:`, error);
+      alert("Failed to save form data: " + error.message);
+      return false;
+    }
+  };
+
+  // Submit handler - save and navigate to next form
+  const onSubmit = async (values) => {
+    const saved = await saveFormData(values);
+    if (saved) {
+      // Navigate to the next form with applicationId
+      const effectiveAppId = applicationId || localStorage.getItem('currentApplicationId') || "682af344-4b55-45f9-ac2e-6f72735d3ea4";
+      navigate(`/onboarding/assignments/${effectiveAppId}`);
     }
   };
 
@@ -187,7 +252,13 @@ export default function AssociationsForm({ applicationId }) {
               >
                 Previous
               </Button>
-              <Button type="submit">Next</Button>
+              <div className="flex gap-2">
+                <SaveProgressButton 
+                  onSave={() => saveFormData(form.getValues())}
+                  variant="secondary"
+                />
+                <Button type="submit">Next</Button>
+              </div>
             </CardFooter>
           </form>
         </Form>
