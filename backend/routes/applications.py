@@ -5,7 +5,7 @@ import models
 from schemas import ApplicationIn, ApplicationOut
 from uuid import UUID
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 @router.post("/applications", response_model=ApplicationOut)
 def create_application(application: ApplicationIn, db: Session = Depends(get_db)):
@@ -31,3 +31,34 @@ def get_application(application_id: UUID, db: Session = Depends(get_db)):
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     return application
+
+@router.get("/applications/{application_id}/forms", response_model=list)
+def get_application_forms(application_id: UUID, db: Session = Depends(get_db)):
+    """Get all form details for a specific application"""
+    # First check if application exists
+    application = db.query(models.Application).filter_by(id=application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Get all form progress entries for this application
+    forms = db.query(models.FormProgress).filter_by(application_id=application_id).all()
+    
+    # Convert to response format
+    return [{
+        "id": str(form.id),
+        "step": form.step,
+        "data": form.data,
+        "last_updated": form.last_updated
+    } for form in forms]
+
+@router.patch("/applications/{application_id}/status")
+def update_application_status(application_id: UUID, status: str, db: Session = Depends(get_db)):
+    """Update the status of an application"""
+    application = db.query(models.Application).filter_by(id=application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    application.status = status
+    db.commit()
+    db.refresh(application)
+    return {"status": "success", "message": f"Application status updated to {status}"}

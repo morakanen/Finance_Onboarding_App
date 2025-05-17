@@ -3,7 +3,7 @@ import { create } from "zustand";
 const useAuthStore = create((set) => ({
   user: null,
   token: null,
-  role: "client", // Default role
+  role: "user", // Default role
   loading: true,
 
   // ✅ Login Function (Stores in Zustand & LocalStorage)
@@ -29,7 +29,7 @@ const useAuthStore = create((set) => ({
     set({
       user: null,
       token: null,
-      role: "client",
+      role: "user",
       loading: false,
     });
   },
@@ -38,7 +38,7 @@ const useAuthStore = create((set) => ({
   init: () => {
     const token = localStorage.getItem("token");
     const user = localStorage.getItem("user");
-    const role = localStorage.getItem("role") || "client"; // Default role if not set
+    const role = localStorage.getItem("role") || "user"; // Default role if not set
 
     if (token && user) {
       set({

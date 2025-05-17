@@ -12,26 +12,32 @@ export default function AuthPage() {
   const { login, init } = useAuthStore(); // Zustand store
   const navigate = useNavigate();
 
-  // ✅ Restore session on mount
+  // Restore session on mount
   useEffect(() => {
     init();
   }, []);
 
-  // ✅ Login Submission (Fixed)
+  // Login Submission (Fixed)
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
       const data = await LoginUser(email, password);
-      const { access_token, role, user } = data;
-      login({ user, token: access_token, role }); // Save login data
-      alert("Login successful!");
-      navigate(role === "admin" ? "/admin/dashboard" : "/dashboard"); // Redirect after login
+      const { access_token, user } = data;
+      const role = user.role;
+      login({ user, token: access_token, role });
+      
+      // Navigate based on role
+      if (role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // ✅ Registration Submission (Fixed)
+  // Registration Submission (Fixed)
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {

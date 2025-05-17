@@ -17,12 +17,14 @@ from passlib.context import CryptContext
 from minio_utils import ensure_bucket_exists
 from routes import clients as clients_routes
 from routes import applications as applications_routes
+from routes import users as users_routes
 
 app = FastAPI()
 
 # Important: Explicitly add tags and prefix to the routers
 app.include_router(clients_routes.router, tags=["clients"])
 app.include_router(applications_routes.router, tags=["applications"])
+app.include_router(users_routes.router, tags=["users"])
 
 @app.on_event("startup")
 def startup_event():
@@ -82,19 +84,12 @@ def create_client(client: ClientCreate, db: Session = Depends(get_db)):
 SECRET_KEY = "your_secret_key"  # Change this in production
 ALGORITHM = "HS256"
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from utils import hash_password, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict):
     to_encode = data.copy()

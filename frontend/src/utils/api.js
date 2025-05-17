@@ -51,6 +51,14 @@ export const saveClientDetails = async (applicationId, step, data) => {
     };
     console.log("[DEBUG] Payload sent to /form-progress:", payload);
     const response = await api.post("/form-progress", payload);
+
+    // After saving the form, check if all forms are completed
+    const formDetails = await getApplicationFormDetails(applicationId);
+    if (formDetails.length === 9) {
+      // All forms are completed, update the status
+      await updateApplicationStatus(applicationId, 'completed');
+    }
+
     return response.data;
   } catch (error) {
     console.error("Error saving client details:", error);
@@ -67,5 +75,60 @@ export const getCurrentUser = async (token) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || "Unauthorized");
+  }
+};
+
+// ✅ Get All Applications API
+export const getAllApplications = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.get("/api/applications", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || "Failed to fetch applications");
+  }
+};
+
+// ✅ Get All Users API
+export const getAllUsers = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.get("/api/users", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || "Failed to fetch users");
+  }
+};
+
+// ✅ Get Application Form Details API
+export const getApplicationFormDetails = async (applicationId) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.get(`/api/applications/${applicationId}/forms`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('Form details response:', response.data); // Add debug logging
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching form details:', error); // Add error logging
+    throw new Error(error.response?.data?.detail || "Failed to fetch application form details");
+  }
+};
+
+// ✅ Update Application Status API
+export const updateApplicationStatus = async (applicationId, status) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.patch(`/api/applications/${applicationId}/status?status=${status}`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating application status:', error);
+    throw new Error(error.response?.data?.detail || "Failed to update application status");
   }
 };

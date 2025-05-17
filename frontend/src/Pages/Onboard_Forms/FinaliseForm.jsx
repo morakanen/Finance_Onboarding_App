@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
+import { updateApplicationStatus } from "../../utils/api";
 import SaveProgressButton from "../../components/SaveProgressButton";
 import {
   Form,
@@ -84,6 +85,8 @@ export default function FinaliseForm({ applicationId }) {
     try {
       const saved = await saveFormData(values);
       if (saved) {
+        // Update application status to completed
+        await updateApplicationStatus(applicationId, 'completed');
         // Navigate to the dashboard after completing all forms
         navigate('/dashboard');
         alert("Onboarding process completed successfully!");

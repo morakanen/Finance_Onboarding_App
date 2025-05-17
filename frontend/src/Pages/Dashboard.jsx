@@ -203,12 +203,10 @@ function Dashboard() {
       
       console.log("Application creation response:", response.status);
       if (!response.ok) {
-        console.error("Error creating application:", response.status, response.statusText);
-        setLoading(false);
-        return;
+        throw new Error(`Error creating application: ${response.status} ${response.statusText}`);
       }
       
-      const data = await res.json();
+      const data = await response.json();
       console.log("Created new application:", data);
       
       // Store the application ID in localStorage for form components to use
@@ -221,6 +219,7 @@ function Dashboard() {
       navigate(`/onboarding/client-details/${data.id}`);
     } catch (err) {
       console.error("Error creating application:", err);
+    } finally {
       setLoading(false);
     }
   };
