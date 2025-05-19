@@ -5,4 +5,4 @@ and score applicants based on their onboarding form data.
 """
 
 # Make the main functions available at the module level
-from .risk_scorer import score_applicant, get_risk_categories
+from .risk_scorer import risk_scorer

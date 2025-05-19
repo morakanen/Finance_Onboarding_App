@@ -119,7 +119,7 @@ export const getApplicationFormDetails = async (applicationId) => {
   }
 };
 
-// ✅ Update Application Status API
+// Update Application Status API
 export const updateApplicationStatus = async (applicationId, status) => {
   try {
     const token = localStorage.getItem('token');
@@ -130,5 +130,139 @@ export const updateApplicationStatus = async (applicationId, status) => {
   } catch (error) {
     console.error('Error updating application status:', error);
     throw new Error(error.response?.data?.detail || "Failed to update application status");
+  }
+};
+
+// Get Risk Assessment for Application
+export const getApplicationRiskScore = async (applicationId) => {
+  try {
+    // Use all available form data to get the most accurate risk assessment
+    const forms = await getApplicationFormDetails(applicationId);
+    
+    // Combine all form data into a single object
+    const combinedData = {};
+    
+    // Map to store which form contains which fields - useful for debugging
+    const fieldSources = {};
+    
+    forms.forEach(form => {
+      if (form.data) {
+        // Track which form each field comes from
+        Object.keys(form.data).forEach(key => {
+          fieldSources[key] = form.step;
+        });
+        
+        // Merge the data
+        Object.assign(combinedData, form.data);
+      }
+    });
+    
+    // For specific key fields needed by risk model, make sure they're present
+    // and correctly named based on our form structure
+    
+    // Required fields with default values
+    const requiredFields = {
+      country: 'United Kingdom',
+      sector: 'Other',
+      businessType: 'Limited Company',
+      contactType: 'Email',
+      introductoryCategory: 'Other',
+      gender: 'Not Specified'
+    };
+
+    // Set default values for missing required fields
+    Object.entries(requiredFields).forEach(([field, defaultValue]) => {
+      if (!combinedData[field]) {
+        combinedData[field] = defaultValue;
+        console.log(`Using default value for ${field}: ${defaultValue}`);
+      }
+    });
+
+    // Ensure we have risk assessment responses
+    for (let i = 1; i <= 7; i++) {
+      // If we have response but no comment, add empty comment
+      if (combinedData[`risk_q${i}_response`] && !combinedData[`risk_q${i}_comment`]) {
+        combinedData[`risk_q${i}_comment`] = '';
+      }
+      // If we have comment but no response, default to 'no'
+      if (combinedData[`risk_q${i}_comment`] && !combinedData[`risk_q${i}_response`]) {
+        combinedData[`risk_q${i}_response`] = 'no';
+      }
+      // If neither exists, set both to defaults
+      if (!combinedData[`risk_q${i}_response`] && !combinedData[`risk_q${i}_comment`]) {
+        combinedData[`risk_q${i}_response`] = 'no';
+        combinedData[`risk_q${i}_comment`] = '';
+      }
+    }
+    
+    console.log('Sending risk assessment data:', {
+      applicationId,
+      dataFields: Object.keys(combinedData),
+      fieldSources,
+      sampleData: {
+        country: combinedData.country,
+        sector: combinedData.sector,
+        businessType: combinedData.businessType
+      }
+    });
+    
+    const token = localStorage.getItem('token');
+    const response = await api.post('/api/applications/risk-score', combinedData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching risk assessment:', error);
+    throw new Error(error.response?.data?.detail || "Failed to fetch risk assessment");
+  }
+};
+
+// Get Risk Categories Info
+export const getRiskCategories = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.get('/api/risk-categories', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const categories = response.data.categories;
+    
+    // Convert category names to title case for display
+    return {
+      'high': {
+        ...categories.high,
+        displayName: 'High'
+      },
+      'medium': {
+        ...categories.medium,
+        displayName: 'Medium'
+      },
+      'low': {
+        ...categories.low,
+        displayName: 'Low'
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching risk categories:', error);
+    // Return default categories if API fails
+    return {
+      'high': {
+        threshold: 70,
+        description: 'High risk clients require enhanced due diligence',
+        color: '#EF4444',
+        displayName: 'High'
+      },
+      'medium': {
+        threshold: 40,
+        description: 'Medium risk clients require standard due diligence',
+        color: '#F59E0B',
+        displayName: 'Medium'
+      },
+      'low': {
+        threshold: 0,
+        description: 'Low risk clients require simplified due diligence',
+        color: '#10B981',
+        displayName: 'Low'
+      }
+    };
   }
 };

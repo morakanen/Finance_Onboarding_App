@@ -4,27 +4,54 @@ from typing import Dict, Any, List, Union
 import uuid
 
 # Try to import risk scoring functions, but make it fault-tolerant
+import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+    logger.addHandler(handler)
+
 try:
-    # Use relative import for Docker container compatibility
-    from ..ml.risk_scorer import score_applicant, get_risk_categories
+    # Use absolute import since we're in a package
+    from ml.risk_scorer import risk_scorer
     ML_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
+    logger.info("Successfully imported risk_scorer")
+except (ImportError, ModuleNotFoundError) as e:
     ML_AVAILABLE = False
+    logger.error(f"Failed to import risk_scorer: {str(e)}")
     # Define fallback functions if ML module isn't available
-    def score_applicant(applicant_data):
-        return {
-            "risk_label": "Medium",
-            "risk_score": 50,
-            "scoring_method": "fallback", 
-            "risk_factors": []
-        }
+    class DummyScorer:
+        def score_applicant(self, applicant_data):
+            return {
+                "risk_label": "medium",
+                "risk_score": 50,
+                "scoring_method": "fallback", 
+                "risk_factors": []
+            }
+            
+        def get_risk_categories(self) -> Dict[str, Dict[str, Any]]:
+            return {
+                'high': {
+                    'threshold': 70,
+                    'description': 'High risk clients require enhanced due diligence',
+                    'color': '#EF4444'  # Red color for high risk
+                },
+                'medium': {
+                    'threshold': 40,
+                    'description': 'Medium risk clients require standard due diligence',
+                    'color': '#F59E0B'  # Amber color for medium risk
+                },
+                'low': {
+                    'threshold': 0,
+                    'description': 'Low risk clients require simplified due diligence',
+                    'color': '#10B981'  # Green color for low risk
+                }
+            }
     
-    def get_risk_categories():
-        return {
-            "High": {"threshold": 70, "color": "#EF4444"},
-            "Medium": {"threshold": 40, "color": "#F59E0B"},
-            "Low": {"threshold": 0, "color": "#10B981"}
-        }
+    risk_scorer = DummyScorer()
 
 router = APIRouter()
 
@@ -106,47 +133,35 @@ async def get_risk_categories_info():
     This is useful for frontend display of risk information.
     """
     try:
-        categories = get_risk_categories()
+        logger.info("Getting risk categories...")
+        categories = risk_scorer.get_risk_categories()
+        logger.info(f"Risk categories: {categories}")
         return {"categories": categories}
     except Exception as e:
-        print(f"Error retrieving risk categories: {e}")
-        raise HTTPException(status_code=500, detail="Error retrieving risk categories")
+        logger.error(f"Error retrieving risk categories: {str(e)}")
+        logger.error("Stack trace:", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/api/applications/risk-score", tags=["Risk Assessment"])
 async def get_application_risk_score(applicant_data: ApplicantData):
-    """
-    Calculate the risk score for a given application.
+    """Calculate the risk score for a given application.
     The input should be a JSON object containing all necessary fields from the onboarding forms.
     """
     try:
-        # Convert Pydantic model to dictionary for the risk scoring function
-        applicant_dict = applicant_data.dict()
-        # Score the application using our modular risk scoring system
-        risk_result = score_applicant(applicant_dict)
+        # Convert Pydantic model to dict for scoring
+        data_dict = applicant_data.dict()
         
-        # Add a temporary application ID if not provided
-        # In a real scenario, this would come from the database
-        application_id = "temp_" + str(uuid.uuid4())
+        logger.info("Calculating risk score...")
+        logger.info(f"ML_AVAILABLE: {ML_AVAILABLE}")
         
-        # Return comprehensive risk information
-        return {
-            "application_id": application_id,
-            "risk_label": risk_result["risk_label"],
-            "risk_score": risk_result["risk_score"],
-            "scoring_method": risk_result["scoring_method"],
-            "risk_factors": risk_result["risk_factors"]
-        }
-    except FileNotFoundError as e:
-        # Specific error for model/vectorizer not found
-        raise HTTPException(status_code=503, detail=f"ML model components not found. Error: {e}")
-    except RuntimeError as e:
-        # Specific error for model not loaded runtime error
-        raise HTTPException(status_code=503, detail=str(e))
-    except ValueError as e:
-        # Errors during data processing
-        raise HTTPException(status_code=400, detail=f"Error processing applicant data: {e}")
+        # Get risk assessment
+        result = risk_scorer.score_applicant(data_dict)
+        logger.info(f"Risk assessment result: {result}")
+        
+        return result
     except Exception as e:
         # Catch-all for other unexpected errors
-        print(f"Unexpected error in risk scoring: {e}") # Log the full error server-side
-        raise HTTPException(status_code=500, detail="An unexpected error occurred while calculating risk score.")
+        logger.error(f"Unexpected error in risk scoring: {str(e)}")
+        logger.error("Stack trace:", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
