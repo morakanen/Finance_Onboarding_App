@@ -75,7 +75,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin

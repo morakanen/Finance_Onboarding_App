@@ -5,15 +5,15 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copy only package files first (Optimizes Docker caching)
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
-# Install dependencies (Ensure ShadCN is installed)
-RUN npm install --frozen-lockfile
+# Install dependencies
+RUN npm ci
 
-# Copy the rest of the app (Includes src/components/ui/)
+# Copy the rest of the app
 COPY . .
 
-# Build the React app (Vite)
+# Build the React app
 RUN npm run build
 
 # Use Nginx to serve the built static files
