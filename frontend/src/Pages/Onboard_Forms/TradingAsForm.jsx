@@ -24,6 +24,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 
+// Helper function to identify required fields
+const isFieldRequired = (fieldName) => {
+  const requiredFields = ['contactType', 'businessType'];
+  return requiredFields.includes(fieldName);
+};
+
 const tradingAsSchema = z.object({
   contactType: z.string().min(1, "Contact type is required"),
   businessType: z.string().min(1, "Business type is required"),
@@ -111,7 +117,7 @@ export default function TradingAsForm({ applicationId }) {
                 name="contactType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contact Type*</FormLabel>
+                    <FormLabel className={isFieldRequired('contactType') ? 'required' : ''}>Contact Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -134,7 +140,7 @@ export default function TradingAsForm({ applicationId }) {
                 name="businessType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Business Type*</FormLabel>
+                    <FormLabel className={isFieldRequired('businessType') ? 'required' : ''}>Business Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>

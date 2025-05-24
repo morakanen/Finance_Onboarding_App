@@ -5,3 +5,10 @@
   padding: 0;
   overflow-x: hidden; /* Prevents horizontal scrolling */
 }
+
+/* Required field indicator */
+.required::after {
+  content: "*";
+  color: #ff0000;
+  margin-left: 4px;
+}

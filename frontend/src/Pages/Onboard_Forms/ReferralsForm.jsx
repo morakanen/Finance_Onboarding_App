@@ -11,6 +11,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormDescription,
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
@@ -22,6 +23,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
+
+// Helper function to identify required fields
+const isFieldRequired = (fieldName) => {
+  const requiredFields = ['introductoryCategory', 'sector'];
+  return requiredFields.includes(fieldName);
+};
 
 const referralsSchema = z.object({
   introductoryCategory: z.string().min(1, "Introductory Category is required"),
@@ -110,7 +117,7 @@ export default function ReferralsForm({ applicationId }) {
                 name="introductoryCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Introductory Category*</FormLabel>
+                    <FormLabel className={isFieldRequired('introductoryCategory') ? 'required' : ''}>Introductory Category</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -133,7 +140,7 @@ export default function ReferralsForm({ applicationId }) {
                 name="sector"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sector*</FormLabel>
+                    <FormLabel className={isFieldRequired('sector') ? 'required' : ''}>Sector</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>

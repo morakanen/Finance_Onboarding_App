@@ -26,15 +26,27 @@ import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 import { saveClientDetails } from "@/utils/api";
 import useAuthStore from "@/store/AuthStore";
 
-
 // 1️⃣ Define your validation schema with Zod:
+// Helper function to identify required fields
+const isFieldRequired = (fieldName) => {
+  const optionalFields = [
+    'middleName',
+    'addressLine2',
+    'county',
+    'backupEmail',
+    'telephone2',
+    'mobile'
+  ];
+  return !optionalFields.includes(fieldName);
+};
+
 const clientDetailsSchema = z.object({
   // -- Client Information --
   title: z.string().nonempty({ message: "Title is required" }),
   firstName: z.string().nonempty({ message: "First Name is required" }),
   middleName: z.string().optional(),
   lastName: z.string().nonempty({ message: "Last Name is required" }),
-  salutation: z.string().optional(),
+  salutation: z.string().nonempty({ message: "Salutation is required" }),
   gender: z.string().nonempty({ message: "Gender is required" }),
 
   // -- Main Address --
@@ -194,7 +206,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel className="required">Title</FormLabel>
                       <FormControl>
                         {/* Example using Shadcn Select */}
                         <Select
@@ -223,7 +235,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="salutation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Salutation</FormLabel>
+                      <FormLabel className="required">Salutation</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. Dear John" {...field} />
                       </FormControl>
@@ -238,7 +250,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel className="required">First Name</FormLabel>
                       <FormControl>
                         <Input placeholder="John" {...field} />
                       </FormControl>
@@ -253,7 +265,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="middleName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Middle Name</FormLabel>
+                      <FormLabel className={isFieldRequired('middleName') ? 'required' : ''}>Middle Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Michael" {...field} />
                       </FormControl>
@@ -268,7 +280,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel className="required">Last Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Doe" {...field} />
                       </FormControl>
@@ -283,7 +295,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gender</FormLabel>
+                      <FormLabel className="required">Gender</FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
@@ -313,7 +325,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="addressLine1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address Line 1</FormLabel>
+                      <FormLabel className="required">Address Line 1</FormLabel>
                       <FormControl>
                         <Input placeholder="123 Example St" {...field} />
                       </FormControl>
@@ -326,7 +338,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="addressLine2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address Line 2</FormLabel>
+                      <FormLabel className={isFieldRequired('addressLine2') ? 'required' : ''}>Address Line 2</FormLabel>
                       <FormControl>
                         <Input placeholder="Apt #10" {...field} />
                       </FormControl>
@@ -339,7 +351,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="town"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Town</FormLabel>
+                      <FormLabel className="required">Town</FormLabel>
                       <FormControl>
                         <Input placeholder="Norwich" {...field} />
                       </FormControl>
@@ -352,7 +364,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="county"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>County</FormLabel>
+                      <FormLabel className={isFieldRequired('county') ? 'required' : ''}>County</FormLabel>
                       <FormControl>
                         <Input placeholder="Norfolk" {...field} />
                       </FormControl>
@@ -365,7 +377,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Country</FormLabel>
+                      <FormLabel className="required">Country</FormLabel>
                       <FormControl>
                         <Input placeholder="UK" {...field} />
                       </FormControl>
@@ -378,7 +390,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="postcode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Postcode</FormLabel>
+                      <FormLabel className="required">Postcode</FormLabel>
                       <FormControl>
                         <Input placeholder="AB12 3CD" {...field} />
                       </FormControl>
@@ -397,7 +409,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="dob"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>DOB</FormLabel>
+                      <FormLabel className="required">DOB</FormLabel>
                       <FormControl>
                         <Input placeholder="dd/mm/yyyy" {...field} />
                       </FormControl>
@@ -411,7 +423,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="dod"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>DOD</FormLabel>
+                      <FormLabel className="required">DOD</FormLabel>
                       <FormControl>
                         <Input placeholder="dd/mm/yyyy" {...field} />
                       </FormControl>
@@ -425,7 +437,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="vatNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VAT Number</FormLabel>
+                      <FormLabel className="required">VAT Number</FormLabel>
                       <FormControl>
                         <Input placeholder="GB123456789" {...field} />
                       </FormControl>
@@ -439,7 +451,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="niNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>NI Number</FormLabel>
+                      <FormLabel className="required">NI Number</FormLabel>
                       <FormControl>
                         <Input placeholder="AB123456C" {...field} />
                       </FormControl>
@@ -453,7 +465,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="utr"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>UTR</FormLabel>
+                      <FormLabel className="required">UTR</FormLabel>
                       <FormControl>
                         <Input placeholder="Unique Taxpayer Reference" {...field} />
                       </FormControl>
@@ -467,7 +479,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="taxType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tax Type</FormLabel>
+                      <FormLabel className="required">Tax Type</FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
@@ -493,7 +505,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="taxInvestigationCover"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tax Investigation Cover</FormLabel>
+                      <FormLabel className="required">Tax Investigation Cover</FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
@@ -518,7 +530,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="yearEnd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Year End</FormLabel>
+                      <FormLabel className="required">Year End</FormLabel>
                       <FormControl>
                         <Input placeholder="dd/mm/yyyy" {...field} />
                       </FormControl>
@@ -533,7 +545,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="isVatInvoiceRequired"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Is VAT invoice required?</FormLabel>
+                      <FormLabel className="required">Is VAT invoice required?</FormLabel>
                       <FormControl>
                         <RadioGroup
                           className="flex gap-4"
@@ -561,7 +573,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="isStatementRequired"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Is statement required?</FormLabel>
+                      <FormLabel className="required">Is statement required?</FormLabel>
                       <FormControl>
                         <RadioGroup
                           className="flex gap-4"
@@ -593,7 +605,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="isBillingSameAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Is billing address same as main address?</FormLabel>
+                      <FormLabel className={isFieldRequired('isBillingSameAddress') ? 'required' : ''}>Is billing address same as main address?</FormLabel>
                       <FormControl>
                         <RadioGroup
                           className="flex gap-4"
@@ -623,7 +635,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingAddressLine1"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Billing Address Line 1</FormLabel>
+                          <FormLabel className={isFieldRequired('billingAddressLine1') ? 'required' : ''}>Billing Address Line 1</FormLabel>
                           <FormControl>
                             <Input placeholder="123 Billing Rd" {...field} />
                           </FormControl>
@@ -636,7 +648,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingAddressLine2"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Billing Address Line 2</FormLabel>
+                          <FormLabel className={isFieldRequired('billingAddressLine2') ? 'required' : ''}>Billing Address Line 2</FormLabel>
                           <FormControl>
                             <Input placeholder="Suite #10" {...field} />
                           </FormControl>
@@ -649,7 +661,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingTown"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Billing Town</FormLabel>
+                          <FormLabel className={isFieldRequired('billingTown') ? 'required' : ''}>Billing Town</FormLabel>
                           <FormControl>
                             <Input placeholder="Norwich" {...field} />
                           </FormControl>
@@ -662,7 +674,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingCounty"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Billing County</FormLabel>
+                          <FormLabel className={isFieldRequired('billingCounty') ? 'required' : ''}>Billing County</FormLabel>
                           <FormControl>
                             <Input placeholder="Norfolk" {...field} />
                           </FormControl>
@@ -675,7 +687,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingCountry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Billing Country</FormLabel>
+                          <FormLabel className={isFieldRequired('billingCountry') ? 'required' : ''}>Billing Country</FormLabel>
                           <FormControl>
                             <Input placeholder="UK" {...field} />
                           </FormControl>
@@ -688,7 +700,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingPostcode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Billing Postcode</FormLabel>
+                          <FormLabel className={isFieldRequired('billingPostcode') ? 'required' : ''}>Billing Postcode</FormLabel>
                           <FormControl>
                             <Input placeholder="AB12 3CD" {...field} />
                           </FormControl>
@@ -709,7 +721,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailCorrespondence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Correspondence</FormLabel>
+                      <FormLabel className="required">Email (Correspondence)</FormLabel>
                       <FormControl>
                         <Input placeholder="Email for official notices" {...field} />
                       </FormControl>
@@ -723,7 +735,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailFeeNote"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Fee note</FormLabel>
+                      <FormLabel className="required">Email (Fee Note)</FormLabel>
                       <FormControl>
                         <Input placeholder="Email for fee notes" {...field} />
                       </FormControl>
@@ -737,7 +749,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailVatInvoice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email VAT invoice</FormLabel>
+                      <FormLabel className="required">Email (VAT Invoice)</FormLabel>
                       <FormControl>
                         <Input placeholder="Email for VAT invoices" {...field} />
                       </FormControl>
@@ -751,7 +763,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailStatement"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Statement</FormLabel>
+                      <FormLabel className="required">Email (Statement)</FormLabel>
                       <FormControl>
                         <Input placeholder="Email for statements" {...field} />
                       </FormControl>
@@ -765,7 +777,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="backupEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Back-up Email</FormLabel>
+                      <FormLabel className={isFieldRequired('backupEmail') ? 'required' : ''}>Backup Email</FormLabel>
                       <FormControl>
                         <Input placeholder="Backup or secondary email" {...field} />
                       </FormControl>
@@ -779,7 +791,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="telephone1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Telephone (1)</FormLabel>
+                      <FormLabel className="required">Telephone 1</FormLabel>
                       <FormControl>
                         <Input placeholder="+44 1234 567890" {...field} />
                       </FormControl>
@@ -793,7 +805,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="telephone2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Telephone (2)</FormLabel>
+                      <FormLabel className={isFieldRequired('telephone2') ? 'required' : ''}>Telephone 2</FormLabel>
                       <FormControl>
                         <Input placeholder="+44 1234 000000" {...field} />
                       </FormControl>
@@ -807,7 +819,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="mobile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile</FormLabel>
+                      <FormLabel className={isFieldRequired('mobile') ? 'required' : ''}>Mobile</FormLabel>
                       <FormControl>
                         <Input placeholder="+44 7777 123456" {...field} />
                       </FormControl>

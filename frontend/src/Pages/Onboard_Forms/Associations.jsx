@@ -20,6 +20,12 @@ import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 
 const MAX_ASSOCIATIONS = 10;
 
+// Helper function to identify required fields
+const isFieldRequired = (fieldName) => {
+  const requiredFields = ['relationship', 'clientNumber'];
+  return requiredFields.includes(fieldName);
+};
+
 const associationSchema = z.object({
   associations: z
     .array(
@@ -189,7 +195,7 @@ export default function AssociationsForm({ applicationId }) {
                     name={`associations.${idx}.relationship`}
                     render={({ field }) => (
                       <FormItem className="flex-1">
-                        <FormLabel>Relationship</FormLabel>
+                        <FormLabel className={isFieldRequired('relationship') ? 'required' : ''}>Relationship</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -213,7 +219,7 @@ export default function AssociationsForm({ applicationId }) {
                     name={`associations.${idx}.clientNumber`}
                     render={({ field }) => (
                       <FormItem className="flex-1">
-                        <FormLabel>of client number</FormLabel>
+                        <FormLabel className={isFieldRequired('clientNumber') ? 'required' : ''}>Client Number</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Enter client number" />
                         </FormControl>

@@ -19,6 +19,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 
+// Helper function to identify required fields
+const isFieldRequired = () => true; // All fields in this form are required
+
 const RISK_QUESTIONS = [
   {
     label: "Have we met the client face to face?",
@@ -182,7 +185,7 @@ export default function RiskAssessmentForm({ applicationId }) {
                         name={`answers.${idx}.comment`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Comment</FormLabel>
+                            <FormLabel className="required">Response</FormLabel>
                             <FormControl>
                               <Textarea {...field} placeholder="Enter comment" />
                             </FormControl>

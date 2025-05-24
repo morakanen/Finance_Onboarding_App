@@ -30,6 +30,12 @@ const ASSIGNMENT_OPTIONS = [
   "Case Bookkeeping",
 ];
 
+// Helper function to identify required fields
+const isFieldRequired = (fieldName) => {
+  const requiredFields = ['assignments', 'recurringFees', 'nonRecurringFees'];
+  return requiredFields.includes(fieldName);
+};
+
 const assignmentsSchema = z.object({
   assignments: z.array(z.string()).min(1, "Select at least one assignment"),
   recurringFees: z.string().min(1, "Recurring fees are required"),
@@ -111,7 +117,7 @@ export default function AssignmentsForm({ applicationId }) {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
               <div>
-                <FormLabel className="font-bold">Assignments</FormLabel>
+                <FormLabel className={isFieldRequired('assignments') ? 'required' : ''}>Assignments</FormLabel>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 mt-2">
                   {ASSIGNMENT_OPTIONS.map((option) => (
                     <FormField
@@ -146,7 +152,7 @@ export default function AssignmentsForm({ applicationId }) {
                   name="recurringFees"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Recurring fees*</FormLabel>
+                      <FormLabel className={isFieldRequired('recurringFees') ? 'required' : ''}>Recurring Fees</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter recurring fees" />
                       </FormControl>
@@ -159,7 +165,7 @@ export default function AssignmentsForm({ applicationId }) {
                   name="nonRecurringFees"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Non-recurring fees*</FormLabel>
+                      <FormLabel className={isFieldRequired('nonRecurringFees') ? 'required' : ''}>Non-recurring Fees</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter non-recurring fees" />
                       </FormControl>
