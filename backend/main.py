@@ -19,6 +19,7 @@ from routes import clients as clients_routes
 from routes import applications as applications_routes
 from routes import users as users_routes
 from routes import risk_assessment as risk_assessment_routes
+from routes import documents as documents_routes
 
 app = FastAPI()
 
@@ -27,6 +28,7 @@ app.include_router(clients_routes.router, tags=["clients"])
 app.include_router(applications_routes.router, tags=["applications"])
 app.include_router(users_routes.router, tags=["users"])
 app.include_router(risk_assessment_routes.router, tags=["risk_assessment"])
+app.include_router(documents_routes.router, tags=["documents"])
 
 @app.on_event("startup")
 def startup_event():

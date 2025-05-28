@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem, SelectContent } from "@/components/ui/select";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
+import { DocumentUpload } from "@/components/DocumentUpload";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const PARTNER_OPTIONS = ["Partner", "Other Partner 1", "Other Partner 2"];
 const MLRO_OPTIONS = ["MLRO/Deputy", "Other MLRO 1", "Other MLRO 2"];
@@ -81,6 +83,30 @@ export default function FinaliseForm({ applicationId }) {
     // eslint-disable-next-line
   }, [applicationId, form.watch]);
 
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadedDocuments, setUploadedDocuments] = useState([]);
+
+  // Load existing documents when component mounts
+  useEffect(() => {
+    if (!applicationId) return;
+    
+    fetch(`http://localhost:8000/api/list-documents/${applicationId}`)
+      .then(response => response.json())
+      .then(documents => {
+        if (!Array.isArray(documents)) return;
+        setUploadedDocuments(documents);
+      })
+      .catch(error => {
+        console.error('Error loading documents:', error);
+        setUploadError('Failed to load existing documents');
+      });
+  }, [applicationId]);
+
+  const handleUploadComplete = (data) => {
+    setUploadedDocuments(prev => [...prev, data]);
+    setUploadError(null);
+  };
+
   const onSubmit = async (values) => {
     try {
       const saved = await saveFormData(values);
@@ -100,6 +126,27 @@ export default function FinaliseForm({ applicationId }) {
   return (
     <div className="mx-auto max-w-5xl w-full">
       <OnboardingBreadcrumbs />
+      <Card className="mb-6">
+        <CardHeader>
+          <h3 className="text-lg font-semibold">Required Documents</h3>
+          <p className="text-sm text-muted-foreground">
+            Please upload any relevant documents for this application
+          </p>
+        </CardHeader>
+        <CardContent>
+          {uploadError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{uploadError}</AlertDescription>
+            </Alert>
+          )}
+          <DocumentUpload
+            applicationId={applicationId}
+            onUploadComplete={handleUploadComplete}
+          />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <h2 className="text-xl font-semibold">Finalise</h2>

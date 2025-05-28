@@ -266,3 +266,53 @@ export const getRiskCategories = async () => {
     };
   }
 };
+
+// Download a document
+export const downloadDocument = async (applicationId, fileId, fileName) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/download-document/${applicationId}/${fileId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error('Download failed');
+    }
+
+    // Create a blob from the response
+    const blob = await response.blob();
+    
+    // Create a temporary URL for the blob
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary link element
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName; // Set the file name
+    
+    // Append to body, click, and remove
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up the temporary URL
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading document:', error);
+    throw new Error(error.response?.data?.detail || 'Failed to download document');
+  }
+};
+
+// Get Application Documents
+export const getApplicationDocuments = async (applicationId) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.get(`/api/list-documents/${applicationId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    throw new Error(error.response?.data?.detail || 'Failed to fetch documents');
+  }
+};

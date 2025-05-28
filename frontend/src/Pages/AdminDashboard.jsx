@@ -8,7 +8,9 @@ import {
   updateApplicationStatus,
   getApplicationRiskScore,
   getRiskCategories,
-  getAllRiskAssessments
+  getAllRiskAssessments,
+  getApplicationDocuments,
+  downloadDocument
 } from "@/utils/api";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,6 +34,7 @@ function AdminDashboard() {
   const [formDetails, setFormDetails] = useState(null);
   const [riskAssessment, setRiskAssessment] = useState(null);
   const [riskCategories, setRiskCategories] = useState(null);
+  const [documents, setDocuments] = useState([]);
 
 
   useEffect(() => {
@@ -117,8 +120,12 @@ function AdminDashboard() {
                                   setRiskAssessment(null);
                                   
                                   // Fetch both form details and risk assessment in parallel
-                                  const details = await getApplicationFormDetails(app.id);
+                                  const [details, docs] = await Promise.all([
+                                    getApplicationFormDetails(app.id),
+                                    getApplicationDocuments(app.id)
+                                  ]);
                                   setFormDetails(details);
+                                  setDocuments(docs);
 
                                   // Check if all 9 forms are completed
                                   if (details.length === 9 && app.status !== 'completed') {
@@ -179,6 +186,49 @@ function AdminDashboard() {
                                       <p className="text-sm text-muted-foreground mt-2">
                                         {formDetails.length} of 9 forms completed
                                       </p>
+                                    </CardContent>
+                                  </Card>
+
+                                  {/* Documents Card */}
+                                  <Card>
+                                    <CardHeader>
+                                      <CardTitle>Uploaded Documents</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      {documents.length === 0 ? (
+                                        <p className="text-muted-foreground">No documents uploaded yet.</p>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          {documents.map((doc) => (
+                                            <div key={doc.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                                              <span className="text-sm truncate max-w-[300px]">{doc.name}</span>
+                                              <div className="space-x-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => window.open(doc.url, '_blank')}
+                                                >
+                                                  View
+                                                </Button>
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={async () => {
+                                                    try {
+                                                      await downloadDocument(selectedApp.id, doc.id, doc.name);
+                                                    } catch (err) {
+                                                      console.error('Error downloading:', err);
+                                                      setError('Failed to download document');
+                                                    }
+                                                  }}
+                                                >
+                                                  Download
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </CardContent>
                                   </Card>
 
