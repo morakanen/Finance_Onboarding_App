@@ -3,7 +3,6 @@ uvicorn
 pydantic
 sqlalchemy
 python-dotenv
-redis
 psycopg2-binary
 pymongo
 motor
@@ -13,6 +12,7 @@ bcrypt
 pyjwt
 passlib
 minio
+aiosmtplib
 
 # ML dependencies
 scikit-learn

@@ -6,7 +6,7 @@ from schemas import UserResponse
 from typing import List
 from uuid import UUID
 from models import RoleEnum
-from utils import hash_password
+from utils.auth import hash_password
 
 # Use a router with explicit prefix
 router = APIRouter(prefix="/api")

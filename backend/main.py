@@ -1,8 +1,9 @@
 import uvicorn
 from fastapi import Depends, HTTPException, FastAPI, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from typing import List, Annotated
 from sqlalchemy.orm import Session
 import datetime
@@ -76,6 +77,15 @@ async def test_mongo():
     except Exception as e:
         return {"error": str(e)}
 
+@app.get("/test-email")
+async def test_email():
+    try:
+        from utils.email import send_application_completed_email
+        success = await send_application_completed_email("test-app-123", "test-user-456")
+        return {"message": "Email sent successfully" if success else "Failed to send email"}
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.post("/add-clients", response_model=ClientResponse)
 def create_client(client: ClientCreate, db: Session = Depends(get_db)):
     new_client = models.Client(name=client.name, email=client.email, phone=client.phone)
@@ -88,7 +98,7 @@ def create_client(client: ClientCreate, db: Session = Depends(get_db)):
 SECRET_KEY = "your_secret_key"  # Change this in production
 ALGORITHM = "HS256"
 
-from utils import hash_password, verify_password
+from utils.auth import hash_password, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
@@ -115,11 +125,41 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
+@app.get("/api/logout")
+@app.get("/logout")
+async def logout(redirect: str = None):
+    # Base frontend URL
+    frontend_url = "http://localhost:3000"
+    
+    # Default redirect to auth page if none specified
+    redirect_url = redirect if redirect and redirect.startswith("http") else f"{frontend_url}/auth"
+    
+    # Add a query parameter to signal frontend to clear state
+    if "?" in redirect_url:
+        redirect_url += "&clearState=true"
+    else:
+        redirect_url += "?clearState=true"
+    
+    response = RedirectResponse(url=redirect_url, status_code=302)
+    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="access_token", path="/api")
+    response.headers["Access-Control-Allow-Origin"] = frontend_url
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
 @app.post("/login")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+    # Check if trying to access admin dashboard
+    redirect_path = form_data.scopes[0] if form_data.scopes else ""
+    if "/admin/" in redirect_path and user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied. Admin privileges required."
+        )
 
     token = create_access_token({"sub": user.email, "role": user.role})
     return {

@@ -1,5 +1,6 @@
 // src/pages/AdminDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
+import { useLocation, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../store/AuthStore';
 import { 
   getAllApplications, 
@@ -26,6 +27,8 @@ import { Progress } from '@/components/ui/progress';
 
 function AdminDashboard() {
   const { user, role, logout } = useAuthStore();
+  const [searchParams] = useSearchParams();
+  const [openDialogs, setOpenDialogs] = useState({});
   const [applications, setApplications] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +40,61 @@ function AdminDashboard() {
   const [documents, setDocuments] = useState([]);
 
 
+  // Function to load application details
+  const loadApplicationDetails = useCallback(async (applicationId) => {
+    try {
+      console.log('Loading details for application:', applicationId);
+      console.log('Current applications:', applications);
+      const app = applications.find(a => a.id === applicationId);
+      console.log('Found application:', app);
+      if (app) {
+        setSelectedApp(app);
+        const [details, docs] = await Promise.all([
+          getApplicationFormDetails(applicationId),
+          getApplicationDocuments(applicationId)
+        ]);
+        setFormDetails(details);
+        setDocuments(docs);
+        setOpenDialogs(prev => ({ ...prev, [applicationId]: true }));
+
+        if (details.length > 0) {
+          try {
+            const riskData = await getApplicationRiskScore(applicationId);
+            setRiskAssessment(riskData);
+          } catch (riskErr) {
+            console.warn('Risk assessment failed but continuing:', riskErr);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error viewing details:', err);
+      setError(err.message);
+    }
+  }, [applications, setSelectedApp, setFormDetails, setDocuments, setRiskAssessment, setError]);
+
+  // Effect to handle URL parameters
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const applicationId = params.get('application');
+    const view = params.get('view');
+    
+    console.log('URL Parameters:', window.location.search);
+    console.log('Parsed - application:', applicationId, 'view:', view);
+    console.log('Current applications:', applications);
+    
+    if (applicationId && view === 'details' && applications.length > 0) {
+      console.log('Attempting to open dialog for application:', applicationId);
+      const app = applications.find(a => a.id === applicationId);
+      console.log('Found application:', app);
+      if (app) {
+        loadApplicationDetails(applicationId);
+      }
+    }
+  }, [searchParams, applications, loadApplicationDetails]);
+
+  // Effect to load initial data
+  useEffect(() => {
+    console.log('Loading initial data...');
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -107,52 +164,15 @@ function AdminDashboard() {
                           <p className="text-sm">Status: {app.status}</p>
                           <p className="text-sm">Created: {new Date(app.created_at).toLocaleDateString()}</p>
                         </div>
-                        <Dialog>
+                        <Dialog 
+                          open={openDialogs[app.id] || false} 
+                          onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, [app.id]: open }))}
+                        >
                           <DialogTrigger asChild>
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={async () => {
-                                try {
-                                  console.log('Fetching details for application:', app.id);
-                                  setSelectedApp(app);
-                                  // Reset any previous risk assessment data
-                                  setRiskAssessment(null);
-                                  
-                                  // Fetch both form details and risk assessment in parallel
-                                  const [details, docs] = await Promise.all([
-                                    getApplicationFormDetails(app.id),
-                                    getApplicationDocuments(app.id)
-                                  ]);
-                                  setFormDetails(details);
-                                  setDocuments(docs);
-
-                                  // Check if all 9 forms are completed
-                                  if (details.length === 9 && app.status !== 'completed') {
-                                    await updateApplicationStatus(app.id, 'completed');
-                                    // Update the application in the applications list
-                                    setApplications(prevApps =>
-                                      prevApps.map(a =>
-                                        a.id === app.id ? { ...a, status: 'completed' } : a
-                                      )
-                                    );
-                                  }
-
-                                  // Only fetch risk assessment if we have some form data
-                                  if (details.length > 0) {
-                                    try {
-                                      const riskData = await getApplicationRiskScore(app.id);
-                                      setRiskAssessment(riskData);
-                                    } catch (riskErr) {
-                                      console.warn('Risk assessment failed but continuing:', riskErr);
-                                      // Non-critical error, don't prevent showing the dialog
-                                    }
-                                  }
-                                } catch (err) {
-                                  console.error('Error viewing details:', err);
-                                  setError(err.message);
-                                }
-                              }}
+                              onClick={() => loadApplicationDetails(app.id)}
                             >
                               View Details
                             </Button>
