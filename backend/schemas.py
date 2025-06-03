@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 # User Schema
 class UserBase(BaseModel):
@@ -53,11 +53,22 @@ class OnboardingResponse(OnboardingBase):
     class Config:
         from_attributes = True
 
-# ✅ Risk Assessment Schema
+# Risk Factor Schema
+class RiskFactor(BaseModel):
+    name: str
+    impact: str  # high, medium, low
+    description: str
+
+# Risk Assessment Schema
 class RiskAssessmentBase(BaseModel):
     client_id: UUID
-    risk_score: int
-    classification: str  # high, standard
+    rule_based_score: float
+    rule_based_level: str  # high, medium, low
+    rule_based_factors: List[RiskFactor]
+    ml_score: Optional[float] = None
+    ml_level: Optional[str] = None
+    ml_factors: Optional[List[RiskFactor]] = None
+    comments: List[str]
 
 class RiskAssessmentCreate(RiskAssessmentBase):
     details: Optional[dict] = None

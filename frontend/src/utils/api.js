@@ -134,7 +134,7 @@ export const updateApplicationStatus = async (applicationId, status) => {
 };
 
 // Get Risk Assessment for Application
-export const getApplicationRiskScore = async (applicationId) => {
+export const getApplicationRiskScore = async (applicationId, ruleWeight = 0.5) => {
   try {
     // Use all available form data to get the most accurate risk assessment
     const forms = await getApplicationFormDetails(applicationId);
@@ -160,18 +160,42 @@ export const getApplicationRiskScore = async (applicationId) => {
     // For specific key fields needed by risk model, make sure they're present
     // and correctly named based on our form structure
     
-    // Required fields with default values
-    const requiredFields = {
+    // Required fields with default values - matching what's required by the backend ApplicantData model
+    const requiredFieldsDefaults = {
+      title: 'Mr',
+      firstName: 'John',
+      lastName: 'Doe',
+      gender: 'Not Specified',
       country: 'United Kingdom',
-      sector: 'Other',
+      taxType: 'Standard',
+      taxInvestigationCover: 'no',
+      isVatInvoiceRequired: 'no',
+      isStatementRequired: 'no',
       businessType: 'Limited Company',
       contactType: 'Email',
+      sector: 'Other',
       introductoryCategory: 'Other',
-      gender: 'Not Specified'
+      recurring_fees: 0,
+      non_recurring_fees: 0,
+      number_of_associations: 0,
+      met_face_to_face: 'no',
+      visited_business_address: 'no',
+      is_uk_resident: 'yes',
+      is_uk_national: 'yes',
+      known_to_partner: 'no',
+      reputable_referral: 'no',
+      plausible_wealth_level: 'yes',
+      identity_verified: 'yes',
+      evidence_recorded: 'yes',
+      client_honest_assessment: 'yes',
+      wealth_plausible: 'yes',
+      adverse_records: 'no',
+      beneficial_owners_verified: 'yes',
+      other_identity_concerns: 'no'
     };
 
     // Set default values for missing required fields
-    Object.entries(requiredFields).forEach(([field, defaultValue]) => {
+    Object.entries(requiredFieldsDefaults).forEach(([field, defaultValue]) => {
       if (!combinedData[field]) {
         combinedData[field] = defaultValue;
         console.log(`Using default value for ${field}: ${defaultValue}`);
@@ -195,19 +219,38 @@ export const getApplicationRiskScore = async (applicationId) => {
       }
     }
     
+    // List of all required fields according to ApplicantData model
+    const requiredFieldsList = [
+      'title', 'firstName', 'lastName', 'gender', 'country', 'taxType',
+      'taxInvestigationCover', 'isVatInvoiceRequired', 'isStatementRequired',
+      'businessType', 'contactType', 'recurring_fees', 'non_recurring_fees',
+      'number_of_associations', 'met_face_to_face', 'visited_business_address',
+      'is_uk_resident', 'is_uk_national', 'known_to_partner', 'reputable_referral',
+      'plausible_wealth_level', 'identity_verified', 'evidence_recorded',
+      'client_honest_assessment', 'wealth_plausible', 'adverse_records',
+      'beneficial_owners_verified', 'other_identity_concerns'
+    ];
+    
+    // Check which required fields are missing
+    const missingFields = requiredFieldsList.filter(field => !combinedData[field]);
+    
     console.log('Sending risk assessment data:', {
       applicationId,
       dataFields: Object.keys(combinedData),
       fieldSources,
+      missingRequiredFields: missingFields,
       sampleData: {
         country: combinedData.country,
-        sector: combinedData.sector,
-        businessType: combinedData.businessType
+        businessType: combinedData.businessType,
+        taxType: combinedData.taxType,
+        taxInvestigationCover: combinedData.taxInvestigationCover,
+        isVatInvoiceRequired: combinedData.isVatInvoiceRequired,
+        isStatementRequired: combinedData.isStatementRequired
       }
     });
     
     const token = localStorage.getItem('token');
-    const response = await api.post('/api/applications/risk-score', combinedData, {
+    const response = await api.post(`/api/applications/risk-score?rule_weight=${ruleWeight}`, combinedData, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
@@ -306,13 +349,25 @@ export const downloadDocument = async (applicationId, fileId, fileName) => {
 // Get Application Documents
 export const getApplicationDocuments = async (applicationId) => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await api.get(`/api/list-documents/${applicationId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.get(`/api/list-documents/${applicationId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching documents:', error);
-    throw new Error(error.response?.data?.detail || 'Failed to fetch documents');
+    console.error('Error fetching application documents:', error);
+    throw new Error(
+      error.response?.data?.detail || 'Failed to fetch application documents'
+    );
+  }
+};
+
+// Get All Risk Assessments
+export const getAllRiskAssessments = async () => {
+  try {
+    const response = await api.get('/risk-assessments');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching risk assessments:', error);
+    throw new Error(
+      error.response?.data?.detail || 'Failed to fetch risk assessments'
+    );
   }
 };

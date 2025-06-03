@@ -10,14 +10,19 @@ from faker import Faker
 import random
 from datetime import datetime, timedelta
 import os
-from .config import (
-    SYNTHETIC_DATA_PATH, 
+from config import (
+    SYNTHETIC_DATA_PATH,
     SAMPLE_JSON_PATH,
     NUM_SYNTHETIC_RECORDS,
     HIGH_RISK_COUNTRIES,
     MEDIUM_RISK_COUNTRIES,
     HIGH_RISK_SECTORS,
-    MEDIUM_RISK_SECTORS
+    MEDIUM_RISK_SECTORS,
+    CATEGORICAL_FEATURES,
+    BINARY_FEATURES,
+    NUMERIC_FEATURES,
+    HIGH_RISK_THRESHOLD,
+    MEDIUM_RISK_THRESHOLD
 )
 
 # Initialize Faker with UK locale
@@ -166,12 +171,124 @@ def calculate_synthetic_risk(applicant):
         return 'Low', score
 
 def generate_synthetic_record():
-    """Generate a single synthetic applicant record"""
-    gender = random.choice(GENDERS)
+    # Client Details
+    title = random.choice(['Mr', 'Mrs', 'Ms', 'Dr', 'Prof'])
+    gender = random.choice(['Male', 'Female', 'Other', 'Prefer not to say'])
     country = random.choices(
         COUNTRIES, 
         weights=[0.45, 0.1, 0.05, 0.05] + [0.035] * len(HIGH_RISK_COUNTRIES) + [0.02] * len(MEDIUM_RISK_COUNTRIES)
     )[0]
+    taxType = random.choice(['Individual', 'Company', 'Partnership', 'Trust'])
+    taxInvestigationCover = random.choice(['yes', 'no'])
+    isVatInvoiceRequired = random.choice(['yes', 'no'])
+    isStatementRequired = random.choice(['yes', 'no'])
+    
+    # Business Details
+    businessType = random.choice(BUSINESS_TYPES)
+    contactType = random.choice(['Primary', 'Secondary', 'Both'])
+    
+    # Fees and Associations
+    recurring_fees = round(random.uniform(1000, 50000), 2)
+    non_recurring_fees = round(random.uniform(500, 25000), 2)
+    number_of_associations = random.randint(0, 10)
+    
+    # Risk Assessment Binary Fields
+    met_face_to_face = random.choice(['yes', 'no'])
+    visited_business_address = random.choice(['yes', 'no'])
+    is_uk_resident = 'yes' if country == 'United Kingdom' else random.choice(['yes', 'no'])
+    is_uk_national = random.choice(['yes', 'no'])
+    known_to_partner = random.choice(['yes', 'no'])
+    reputable_referral = random.choice(['yes', 'no'])
+    plausible_wealth_level = random.choice(['yes', 'no'])
+    
+    # KYC Binary Fields
+    identity_verified = random.choice(['yes', 'no'])
+    evidence_recorded = random.choice(['yes', 'no'])
+    client_honest_assessment = random.choice(['yes', 'no'])
+    wealth_plausible = random.choice(['yes', 'no'])
+    adverse_records = random.choice(['yes', 'no'])
+    beneficial_owners_verified = random.choice(['yes', 'no'])
+    other_identity_concerns = random.choice(['yes', 'no'])
+    
+    # Create record
+    record = {
+        'title': title,
+        'gender': gender,
+        'country': country,
+        'taxType': taxType,
+        'taxInvestigationCover': taxInvestigationCover,
+        'isVatInvoiceRequired': isVatInvoiceRequired,
+        'isStatementRequired': isStatementRequired,
+        'businessType': businessType,
+        'contactType': contactType,
+        'recurring_fees': recurring_fees,
+        'non_recurring_fees': non_recurring_fees,
+        'number_of_associations': number_of_associations,
+        'met_face_to_face': met_face_to_face,
+        'visited_business_address': visited_business_address,
+        'is_uk_resident': is_uk_resident,
+        'is_uk_national': is_uk_national,
+        'known_to_partner': known_to_partner,
+        'reputable_referral': reputable_referral,
+        'plausible_wealth_level': plausible_wealth_level,
+        'identity_verified': identity_verified,
+        'evidence_recorded': evidence_recorded,
+        'client_honest_assessment': client_honest_assessment,
+        'wealth_plausible': wealth_plausible,
+        'adverse_records': adverse_records,
+        'beneficial_owners_verified': beneficial_owners_verified,
+        'other_identity_concerns': other_identity_concerns
+    }
+    
+    # Calculate risk score
+    risk_score = 50.0  # Base score
+    
+    # Country risk (0-20 points)
+    if country in HIGH_RISK_COUNTRIES:
+        risk_score += 20
+    elif country in MEDIUM_RISK_COUNTRIES:
+        risk_score += 10
+    elif country != 'United Kingdom':
+        risk_score += 5
+    
+    # Identity verification (0-25 points)
+    if identity_verified == 'no':
+        risk_score += 25
+    if evidence_recorded == 'no':
+        risk_score += 15
+    
+    # Business structure risk (0-15 points)
+    if businessType in ['Limited Company', 'Partnership']:
+        risk_score += 10
+    
+    # Financial risk (0-20 points)
+    if recurring_fees > 40000:
+        risk_score += 10
+    if non_recurring_fees > 8000:
+        risk_score += 10
+    
+    # KYC concerns (0-30 points)
+    if adverse_records == 'yes':
+        risk_score += 15
+    if other_identity_concerns == 'yes':
+        risk_score += 15
+    
+    # Risk reducers (-30 points max)
+    if known_to_partner == 'yes':
+        risk_score -= 10
+    if reputable_referral == 'yes':
+        risk_score -= 10
+    if met_face_to_face == 'yes' and visited_business_address == 'yes':
+        risk_score -= 10
+    
+    # Add random noise (-5 to +5)
+    risk_score += random.uniform(-5, 5)
+    
+    # Ensure score is between 0 and 100
+    risk_score = max(0, min(100, risk_score))
+    
+    record['risk_score'] = round(risk_score, 2)
+    return record
     
     sector = random.choices(
         SECTORS,
@@ -265,7 +382,42 @@ def generate_synthetic_record():
     return record
 
 def generate_dataset():
-    """Generate complete synthetic dataset"""
+    """Generate complete synthetic dataset for risk model training"""
+    print(f"Generating {NUM_SYNTHETIC_RECORDS} synthetic records...")
+    
+    # Generate records
+    records = [generate_synthetic_record() for _ in range(NUM_SYNTHETIC_RECORDS)]
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(records)
+    
+    # Add risk labels based on thresholds
+    df['risk_label'] = pd.cut(
+        df['risk_score'],
+        bins=[0, MEDIUM_RISK_THRESHOLD, HIGH_RISK_THRESHOLD, 100],
+        labels=['Low', 'Medium', 'High']
+    )
+    
+    # Save to CSV
+    print(f"Saving synthetic data to {SYNTHETIC_DATA_PATH}")
+    df.to_csv(SYNTHETIC_DATA_PATH, index=False)
+    
+    # Print summary statistics
+    print("\nDataset Summary:")
+    print(f"Total records: {len(df)}")
+    print("\nRisk Label Distribution:")
+    print(df['risk_label'].value_counts())
+    print("\nRisk Score Statistics:")
+    print(df['risk_score'].describe())
+    
+    # Save a sample record as JSON
+    sample_record = df.iloc[0].to_dict()
+    print(f"\nSaving sample record to {SAMPLE_JSON_PATH}")
+    with open(SAMPLE_JSON_PATH, 'w') as f:
+        json.dump(sample_record, f, indent=2)
+    
+    print("\nData generation complete!")
+    return True
     print(f"Generating {NUM_SYNTHETIC_RECORDS} synthetic applicant records...")
     
     records = [generate_synthetic_record() for _ in range(NUM_SYNTHETIC_RECORDS)]

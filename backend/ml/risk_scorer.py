@@ -10,6 +10,13 @@ import numpy as np
 import random
 import logging
 import traceback
+from pathlib import Path
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+import nltk
+import re
 from typing import Dict, Any, Tuple, Optional, List, Union
 from .config import (
     MODEL_PATH, 
@@ -32,17 +39,121 @@ if not logger.handlers:
     handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
     logger.addHandler(handler)
 
+class CommentAnalyzer:
+    def __init__(self):
+        # Download required NLTK data
+        try:
+            nltk.data.find('tokenizers/punkt')
+            nltk.data.find('corpora/stopwords')
+            nltk.data.find('corpora/wordnet')
+        except LookupError:
+            nltk.download('punkt')
+            nltk.download('stopwords')
+            nltk.download('wordnet')
+        
+        self.lemmatizer = WordNetLemmatizer()
+        self.stop_words = set(stopwords.words('english'))
+        
+        # Risk-related keywords and their weights
+        self.risk_keywords = {
+            'high_risk': {
+                'suspicious': 0.8,
+                'concern': 0.7,
+                'unusual': 0.6,
+                'complex': 0.5,
+                'unclear': 0.5,
+                'incomplete': 0.6,
+                'missing': 0.7,
+                'investigation': 0.8,
+                'fraud': 0.9,
+                'criminal': 0.9,
+                'sanctions': 0.9,
+                'pep': 0.8,  # Politically Exposed Person
+                'offshore': 0.7,
+                'shell': 0.8,
+                'nominee': 0.6
+            },
+            'medium_risk': {
+                'delayed': 0.4,
+                'pending': 0.3,
+                'requested': 0.3,
+                'awaiting': 0.3,
+                'foreign': 0.4,
+                'international': 0.4,
+                'complex': 0.4,
+                'multiple': 0.3
+            },
+            'low_risk': {
+                'verified': -0.3,
+                'confirmed': -0.3,
+                'complete': -0.2,
+                'clear': -0.2,
+                'standard': -0.2,
+                'simple': -0.3,
+                'straightforward': -0.3,
+                'transparent': -0.4,
+                'documented': -0.3
+            }
+        }
+    
+    def preprocess_text(self, text: str) -> str:
+        # Convert to lowercase and remove special characters
+        text = re.sub(r'[^a-zA-Z\s]', '', text.lower())
+        
+        # Tokenize
+        tokens = word_tokenize(text)
+        
+        # Remove stopwords and lemmatize
+        tokens = [self.lemmatizer.lemmatize(token) for token in tokens if token not in self.stop_words]
+        
+        return ' '.join(tokens)
+    
+    def analyze_comment(self, comment: str) -> float:
+        if not comment or comment.strip() == '':
+            return 0.0
+        
+        # Preprocess the comment
+        processed_text = self.preprocess_text(comment)
+        words = processed_text.split()
+        
+        # Calculate risk score based on keyword presence
+        risk_score = 0.0
+        word_count = len(words)
+        
+        if word_count == 0:
+            return 0.0
+        
+        # Check for risk keywords and calculate weighted score
+        for word in words:
+            if word in self.risk_keywords['high_risk']:
+                risk_score += self.risk_keywords['high_risk'][word]
+            elif word in self.risk_keywords['medium_risk']:
+                risk_score += self.risk_keywords['medium_risk'][word]
+            elif word in self.risk_keywords['low_risk']:
+                risk_score += self.risk_keywords['low_risk'][word]
+        
+        # Normalize score to range [-1, 1]
+        normalized_score = risk_score / word_count
+        
+        # Convert to 0-1 range
+        return (normalized_score + 1) / 2
+
 class RiskScorer:
     """Risk assessment scorer that uses both ML and rule-based approaches"""
     
     def __init__(self):
+        """Initialize the risk scorer"""
         self.model = None
-        self.tfidf_vectorizer = None
-        self.categorical_encoder = None
+        self.preprocessor = None
         self.feature_names = None
-        
+        self.comment_analyzer = CommentAnalyzer()
         # Try to load the ML model and components
         self.ml_available = self._load_ml_components()
+        
+    def load_model(self):
+        """Load model components - kept for backward compatibility"""
+        logger.info("Using _load_ml_components instead of load_model")
+        return self._load_ml_components()
     
     def _load_ml_components(self) -> bool:
         """Load ML model and components, return True if successful"""
@@ -443,7 +554,15 @@ class RiskScorer:
 
 
 # Initialize a global instance of the risk scorer
-risk_scorer = RiskScorer()
+try:
+    risk_scorer = RiskScorer()
+    logger.info("Successfully initialized RiskScorer")
+except Exception as e:
+    logger.error(f"Failed to initialize RiskScorer: {str(e)}")
+    # Create a dummy RiskScorer for fallback
+    from ml.rule_based_scorer import RuleBasedScorer
+    risk_scorer = RuleBasedScorer()  # Use rule-based as fallback
+    logger.info("Using RuleBasedScorer as fallback")
 
 
 def score_applicant(applicant_data: Dict[str, Any]) -> Dict[str, Any]:

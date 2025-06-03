@@ -59,10 +59,37 @@ function AdminDashboard() {
 
         if (details.length > 0) {
           try {
-            const riskData = await getApplicationRiskScore(applicationId);
-            setRiskAssessment(riskData);
+            // Pass rule_weight=0.5 for equal weighting between rule-based and ML scoring
+            // Get risk assessment data with 0.5 rule weight (50/50 balance)
+            const riskData = await getApplicationRiskScore(applicationId, 0.5);
+            console.log('Risk assessment loaded successfully:', riskData);
+            
+            // Transform the nested response structure to flat properties for UI display
+            const formattedRiskData = {
+              // Weighted score properties
+              weighted_score: riskData.weighted?.score || 0,
+              weighted_level: riskData.weighted?.level || 'low',
+              weighted_factors: riskData.weighted?.factors || [],
+              
+              // Rule-based score properties
+              rule_based_score: riskData.rule_based?.score || 0,
+              rule_based_level: riskData.rule_based?.level || 'low',
+              rule_based_factors: riskData.rule_based?.factors || [],
+              
+              // ML-based score properties
+              ml_score: riskData.ml_based?.score || 0,
+              ml_level: riskData.ml_based?.level || 'low',
+              ml_factors: riskData.ml_based?.factors || [],
+              
+              // Other properties
+              comments: riskData.comments || []
+            };
+            
+            console.log('Formatted risk data for UI:', formattedRiskData);
+            setRiskAssessment(formattedRiskData);
           } catch (riskErr) {
-            console.warn('Risk assessment failed but continuing:', riskErr);
+            console.error('Risk assessment failed but continuing:', riskErr);
+            console.error('Error details:', riskErr.message);
           }
         }
       }
@@ -274,33 +301,106 @@ function AdminDashboard() {
                                       </CardHeader>
                                       <CardContent>
                                         {riskAssessment ? (
-                                          <div className="space-y-4">
+                                          <div className="space-y-6">
+                                            {/* Weighted risk score */}
                                             <div>
+                                              <h4 className="text-sm font-semibold mb-3">Weighted Assessment</h4>
                                               <div className="flex justify-between items-center mb-2">
-                                                <span className="text-sm font-medium">Risk Score</span>
-                                                <span className="text-sm font-bold">{riskAssessment.risk_score}/100</span>
+                                                <span className="text-sm font-medium">Combined Risk Score</span>
+                                                <span className="text-sm font-bold">{riskAssessment.weighted_score || 0}/100</span>
                                               </div>
                                               <Progress 
-                                                value={riskAssessment.risk_score} 
-                                                className="w-full"
-                                                indicatorClassName={`${riskAssessment.risk_label === 'High' ? 'bg-red-500' : riskAssessment.risk_label === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'}`}
+                                                value={riskAssessment.weighted_score || 0} 
+                                                className="w-full h-3"
+                                                indicatorClassName={`${riskAssessment.weighted_level === 'high' ? 'bg-red-500' : riskAssessment.weighted_level === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`}
                                               />
+                                              <p className="text-xs text-gray-500 mt-1">Combined rule-based and ML analysis</p>
                                             </div>
                                             
-                                            {riskAssessment.risk_factors && riskAssessment.risk_factors.length > 0 && (
+                                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                              {/* Rule-based risk score */}
+                                              <div>
+                                                <h4 className="text-sm font-semibold mb-2">Rule-Based Assessment</h4>
+                                                <div className="flex justify-between items-center mb-2">
+                                                  <span className="text-sm font-medium">Score</span>
+                                                  <span className="text-sm font-bold">{riskAssessment.rule_based_score}/100</span>
+                                                </div>
+                                                <Progress 
+                                                  value={riskAssessment.rule_based_score} 
+                                                  className="w-full"
+                                                  indicatorClassName={`${riskAssessment.rule_based_level === 'high' ? 'bg-red-500' : riskAssessment.rule_based_level === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`}
+                                                />
+                                              </div>
+                                              
+                                              {/* ML-based risk score */}
+                                              {riskAssessment.ml_score !== null && (
+                                                <div>
+                                                  <h4 className="text-sm font-semibold mb-2">ML Model Assessment</h4>
+                                                  <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-sm font-medium">Score</span>
+                                                    <span className="text-sm font-bold">{riskAssessment.ml_score}/100</span>
+                                                  </div>
+                                                  <Progress 
+                                                    value={riskAssessment.ml_score} 
+                                                    className="w-full"
+                                                    indicatorClassName={`${riskAssessment.ml_level === 'high' ? 'bg-red-500' : riskAssessment.ml_level === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`}
+                                                  />
+                                                </div>
+                                              )}
+                                            </div>
+                                            
+                                            {/* Rule-based risk factors */}
+                                            {riskAssessment.rule_based_factors && riskAssessment.rule_based_factors.length > 0 && (
                                               <div className="mt-4">
-                                                <h4 className="text-sm font-semibold mb-2">Risk Factors</h4>
+                                                <h4 className="text-sm font-semibold mb-2">Rule-Based Risk Factors</h4>
                                                 <ul className="space-y-2">
-                                                  {riskAssessment.risk_factors.map((factor, index) => (
+                                                  {riskAssessment.rule_based_factors.map((factor, index) => (
                                                     <li key={index} className="text-sm p-2 border rounded bg-muted/20">
                                                       <span 
                                                         className="inline-block w-2 h-2 rounded-full mr-2"
                                                         style={{
-                                                          backgroundColor: factor.severity === 'high' ? '#EF4444' : 
-                                                                          factor.severity === 'medium' ? '#F59E0B' : '#10B981'
+                                                          backgroundColor: factor.impact === 'high' ? '#EF4444' : 
+                                                                          factor.impact === 'medium' ? '#F59E0B' : '#10B981'
                                                         }}
                                                       />
-                                                      {factor.description}
+                                                      <strong>{factor.name}</strong>
+                                                      <p className="mt-1 text-xs text-muted-foreground">{factor.description}</p>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                            
+                                            {/* ML-based risk factors */}
+                                            {riskAssessment.ml_factors && riskAssessment.ml_factors.length > 0 && (
+                                              <div className="mt-4">
+                                                <h4 className="text-sm font-semibold mb-2">ML Model Risk Factors</h4>
+                                                <ul className="space-y-2">
+                                                  {riskAssessment.ml_factors.map((factor, index) => (
+                                                    <li key={index} className="text-sm p-2 border rounded bg-muted/20">
+                                                      <span 
+                                                        className="inline-block w-2 h-2 rounded-full mr-2"
+                                                        style={{
+                                                          backgroundColor: factor.impact === 'high' ? '#EF4444' : 
+                                                                          factor.impact === 'medium' ? '#F59E0B' : '#10B981'
+                                                        }}
+                                                      />
+                                                      <strong>{factor.name}</strong>
+                                                      <p className="mt-1 text-xs text-muted-foreground">{factor.description}</p>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                            
+                                            {/* Comments section */}
+                                            {riskAssessment.comments && riskAssessment.comments.length > 0 && (
+                                              <div className="mt-4">
+                                                <h4 className="text-sm font-semibold mb-2">Additional Comments</h4>
+                                                <ul className="space-y-2">
+                                                  {riskAssessment.comments.map((comment, index) => (
+                                                    <li key={index} className="text-sm p-2 border rounded bg-muted/20">
+                                                      {comment}
                                                     </li>
                                                   ))}
                                                 </ul>

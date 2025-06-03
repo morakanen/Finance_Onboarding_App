@@ -17,6 +17,7 @@ import HomePage from "./Pages/Homepage";
 import AuthPage from "./Pages/Authpage";
 import Dashboard from "./Pages/Dashboard";
 import AdminDashboard from "./Pages/AdminDashboard";
+import ViewApplicationDetails from "./Pages/ViewApplicationDetails";
 import ClientDetailsForm from "./Pages/Onboard_Forms/ClientDetailsForm";
 import ClientDetailsFormWrapper from "./Pages/Onboard_Forms/ClientDetailsFormWrapper";
 import TradingAsForm from "./Pages/Onboard_Forms/TradingAsForm";
@@ -140,6 +141,11 @@ function AnimatedRoutes() {
         <Route path="/onboarding/finalise/:applicationId"
         element={
           user ? <PageWrapper><FinaliseFormWrapper /></PageWrapper>
+          : <Navigate to="/auth" />} />
+
+        <Route path="/applications/:applicationId"
+        element={
+          user ? <PageWrapper><ViewApplicationDetails /></PageWrapper>
           : <Navigate to="/auth" />} />
 
       </Routes>

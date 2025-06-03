@@ -1,27 +1,27 @@
 """
-ML model trainer for risk assessment.
-Trains a model on synthetic data and saves it for use in prediction.
+XGBoost-based risk assessment model trainer.
+Trains a regression model to predict risk scores based on application data.
 """
 
 import pandas as pd
 import numpy as np
 import os
-import joblib
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
+import json
+import xgboost as xgb
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import mean_squared_error, r2_score
+import joblib
 from .config import (
-    SYNTHETIC_DATA_PATH, 
-    MODEL_PATH, 
-    VECTORIZER_PATH, 
-    ENCODER_PATH,
+    SYNTHETIC_DATA_PATH,
+    XGBOOST_MODEL_PATH,
+    SCALER_PATH,
     FEATURE_NAMES_PATH,
-    TEXT_FEATURES,
     CATEGORICAL_FEATURES,
+    BINARY_FEATURES,
+    NUMERIC_FEATURES,
+    TEXT_FEATURES
 )
 
 def train_risk_model():
