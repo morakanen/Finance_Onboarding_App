@@ -21,13 +21,22 @@ const RiskAssessment = ({
   weightedFactors,
   comments
 }) => {
-  // Determine risk level and color
+  // Simple function to determine risk level and color based on score
   const getRiskLevel = (score) => {
-    if (score >= 70) return { level: 'High', color: 'bg-red-500', textColor: 'text-red-500' };
-    if (score >= 40) return { level: 'Medium', color: 'bg-yellow-500', textColor: 'text-yellow-500' };
-    return { level: 'Low', color: 'bg-green-500', textColor: 'text-green-500' };
+    // Ensure score is treated as a number
+    const numericScore = parseFloat(score);
+    
+    // Determine risk level based on score thresholds
+    if (numericScore >= 70) {
+      return { level: 'High', color: 'bg-red-500', textColor: 'text-red-500' };
+    } else if (numericScore >= 40) {
+      return { level: 'Medium', color: 'bg-yellow-500', textColor: 'text-yellow-500' };
+    } else {
+      return { level: 'Low', color: 'bg-green-500', textColor: 'text-green-500' };
+    }
   };
 
+  // Always calculate risk levels based on the numeric scores
   const ruleBased = getRiskLevel(ruleBasedScore);
   const mlBased = getRiskLevel(mlBasedScore);
   const weighted = getRiskLevel(weightedScore);
@@ -37,7 +46,14 @@ const RiskAssessment = ({
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           Risk Assessment
-          <Badge className={weighted.color}>{weighted.level} Risk</Badge>
+          {/* Force correct risk level display based on score */}
+          {weightedScore >= 70 ? (
+            <Badge className="bg-red-500 text-white">High Risk</Badge>
+          ) : weightedScore >= 40 ? (
+            <Badge className="bg-yellow-500 text-white">Medium Risk</Badge>
+          ) : (
+            <Badge className="bg-green-500 text-white">Low Risk</Badge>
+          )}
         </CardTitle>
         <CardDescription>
           Comprehensive risk analysis with weighted score
@@ -51,7 +67,10 @@ const RiskAssessment = ({
               <span className="text-sm font-medium font-bold">Weighted Risk Score</span>
               <span className="text-sm font-medium font-bold">{weightedScore.toFixed(1)}/100</span>
             </div>
-            <Progress value={weightedScore} className={`h-3 ${weighted.color}`} />
+            <Progress 
+              value={weightedScore} 
+              className={`h-3 ${weightedScore >= 70 ? 'bg-red-500' : weightedScore >= 40 ? 'bg-yellow-500' : 'bg-green-500'}`} 
+            />
             <p className="text-xs text-gray-500 mt-1">Combined rule-based and ML analysis</p>
           </div>
 

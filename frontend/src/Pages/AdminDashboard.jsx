@@ -10,6 +10,7 @@ import {
   getRiskCategories,
   getApplicationDocuments,
   downloadDocument,
+  approveApplication,
 } from "@/utils/api";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,8 @@ function AdminDashboard() {
   const [searchParams] = useSearchParams();
 
   const [openDialogs, setOpenDialogs] = useState({});
+  const [approvingId, setApprovingId] = useState(null);
+  const [approvalSuccess, setApprovalSuccess] = useState(null);
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [users, setUsers] = useState([]);
@@ -355,6 +358,40 @@ function AdminDashboard() {
     setSortConfig({ key: 'created_at', direction: 'desc' });
   };
 
+  const handleApproveApplication = async (applicationId) => {
+    try {
+      setApprovingId(applicationId);
+      setApprovalSuccess(null);
+      
+      await approveApplication(applicationId);
+      
+      // Update the application status in the local state
+      setApplications(prevApps => 
+        prevApps.map(app => 
+          app.id === applicationId ? { ...app, status: 'approved' } : app
+        )
+      );
+      
+      setFilteredApplications(prevApps => 
+        prevApps.map(app => 
+          app.id === applicationId ? { ...app, status: 'approved' } : app
+        )
+      );
+      
+      setApprovalSuccess(applicationId);
+      
+      // Clear the success message after 3 seconds
+      setTimeout(() => {
+        setApprovalSuccess(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error approving application:', error);
+      setError(`Failed to approve application: ${error.message}`);
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   const requestSort = (key) => {
     setSortConfig(prevConfig => ({
       key,
@@ -601,14 +638,21 @@ function AdminDashboard() {
                                     </h3>
                                     <Badge
                                       className={`ml-2 ${
-                                        app.status === "completed"
+                                        app.status === "approved"
+                                          ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
+                                          : app.status === "completed"
                                           ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
                                           : app.status === "in_progress"
                                           ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
                                           : "bg-zinc-500/20 text-zinc-400 hover:bg-zinc-500/30"
                                       }`}
                                     >
-                                      {app.status === "completed" ? (
+                                      {app.status === "approved" ? (
+                                        <>
+                                          <CheckCircle className="w-3 h-3 mr-1" />{" "}
+                                          Approved
+                                        </>
+                                      ) : app.status === "completed" ? (
                                         <>
                                           <CheckCircle className="w-3 h-3 mr-1" />{" "}
                                           Completed
@@ -625,6 +669,11 @@ function AdminDashboard() {
                                         </>
                                       )}
                                     </Badge>
+                                    {approvalSuccess === app.id && (
+                                      <span className="text-xs text-purple-400 ml-2 animate-pulse">
+                                        Application approved successfully!
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="text-xs text-zinc-400">
                                     Created:{" "}
@@ -638,29 +687,47 @@ function AdminDashboard() {
                                   </p>
                                 </div>
 
-                                <Dialog
-                                  open={!!openDialogs[app.id]}
-                                  onOpenChange={(open) =>
-                                    setOpenDialogs((prev) => ({
-                                      ...prev,
-                                      [app.id]: open,
-                                    }))
-                                  }
-                                >
-                                  <DialogTrigger asChild>
+                                <div className="flex gap-2">
+                                  {app.status !== 'approved' && (
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() =>
-                                        loadApplicationDetails(app.id)
-                                      }
-                                      className="bg-blue-600/10 border-blue-600/50 hover:bg-blue-600/90 text-blue-400 hover:text-white transition-colors duration-200"
+                                      onClick={() => handleApproveApplication(app.id)}
+                                      disabled={approvingId === app.id}
+                                      className="bg-purple-600/10 border-purple-600/50 hover:bg-purple-600/90 text-purple-400 hover:text-white transition-colors duration-200"
                                     >
-                                      View Details
+                                      {approvingId === app.id ? (
+                                        <>
+                                          <span className="animate-spin mr-1">⏳</span> Approving...
+                                        </>
+                                      ) : (
+                                        <>Approve</>  
+                                      )}
                                     </Button>
-                                  </DialogTrigger>
+                                  )}
+                                  <Dialog
+                                    open={!!openDialogs[app.id]}
+                                    onOpenChange={(open) =>
+                                      setOpenDialogs((prev) => ({
+                                        ...prev,
+                                        [app.id]: open,
+                                      }))
+                                    }
+                                  >
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          loadApplicationDetails(app.id)
+                                        }
+                                        className="bg-blue-600/10 border-blue-600/50 hover:bg-blue-600/90 text-blue-400 hover:text-white transition-colors duration-200"
+                                      >
+                                        View Details
+                                      </Button>
+                                    </DialogTrigger>
 
-                                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-zinc-900 border-zinc-700">
+                                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-zinc-900 border-zinc-700">
                                     <DialogHeader>
                                       <DialogTitle>
                                         Application Details
@@ -690,7 +757,39 @@ function AdminDashboard() {
                                               </p>
                                               <p>
                                                 <strong>Status:</strong>{" "}
-                                                {selectedApp.status}
+                                                <Badge
+                                                  className={`ml-2 ${
+                                                    selectedApp.status === "approved"
+                                                      ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
+                                                      : selectedApp.status === "completed"
+                                                      ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                                                      : selectedApp.status === "in_progress"
+                                                      ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                                                      : "bg-zinc-500/20 text-zinc-400 hover:bg-zinc-500/30"
+                                                  }`}
+                                                >
+                                                  {selectedApp.status === "approved" ? (
+                                                    <>
+                                                      <CheckCircle className="w-3 h-3 mr-1" />{" "}
+                                                      Approved
+                                                    </>
+                                                  ) : selectedApp.status === "completed" ? (
+                                                    <>
+                                                      <CheckCircle className="w-3 h-3 mr-1" />{" "}
+                                                      Completed
+                                                    </>
+                                                  ) : selectedApp.status === "in_progress" ? (
+                                                    <>
+                                                      <Clock className="w-3 h-3 mr-1" /> In
+                                                      Progress
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <AlertTriangle className="w-3 h-3 mr-1" />{" "}
+                                                      {selectedApp.status}
+                                                    </>
+                                                  )}
+                                                </Badge>
                                               </p>
                                               <p>
                                                 <strong>Created:</strong>{" "}
@@ -1139,6 +1238,7 @@ function AdminDashboard() {
                                   </DialogContent>
                                 </Dialog>
                               </div>
+                            </div>
                             </CardContent>
                           </Card>
                         </motion.div>

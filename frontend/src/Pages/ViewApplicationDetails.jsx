@@ -31,6 +31,20 @@ const ViewApplicationDetails = () => {
         const riskResponse = await fetch(`/api/applications/${applicationId}/risk-score?rule_weight=0.5`);
         if (!riskResponse.ok) throw new Error('Failed to fetch risk data');
         const riskData = await riskResponse.json();
+        
+        // Force correct risk level calculation based on score
+        if (riskData && riskData.weighted && riskData.weighted.score) {
+          const score = parseFloat(riskData.weighted.score);
+          if (score >= 70) {
+            riskData.weighted.level = 'high';
+          } else if (score >= 40) {
+            riskData.weighted.level = 'medium';
+          } else {
+            riskData.weighted.level = 'low';
+          }
+          console.log('Corrected risk level:', riskData.weighted.level, 'for score:', score);
+        }
+        
         console.log('Risk assessment data received:', riskData);
         setRiskData(riskData);
 

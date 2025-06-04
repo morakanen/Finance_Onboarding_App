@@ -138,6 +138,20 @@ export const updateApplicationStatus = async (applicationId, status) => {
   }
 };
 
+// Approve Application API
+export const approveApplication = async (applicationId) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await api.patch(`/api/applications/${applicationId}/status?status=approved`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error approving application:', error);
+    throw new Error(error.response?.data?.detail || "Failed to approve application");
+  }
+};
+
 // Get Risk Assessment for Application
 export const getApplicationRiskScore = async (applicationId, ruleWeight = 0.5) => {
   try {
