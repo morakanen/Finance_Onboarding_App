@@ -3,6 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
 import SaveProgressButton from "../../components/SaveProgressButton";
 import {
@@ -132,26 +133,46 @@ export default function KYCForm({ applicationId }) {
   }, {});
 
   return (
-    <div className="mx-auto max-w-5xl w-full">
+    <motion.div 
+      className="mx-auto max-w-5xl w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <OnboardingBreadcrumbs />
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Know Your Client</h2>
-          <p className="text-sm text-muted-foreground">
-            Please answer all questions and provide a comment for each
-          </p>
-        </CardHeader>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-zinc-800">
+            <h2 className="text-xl font-semibold text-white flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Know Your Client
+            </h2>
+            <p className="text-sm text-zinc-400">
+              Please answer all questions and provide a comment for each
+            </p>
+          </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 bg-zinc-900/70">
               {Object.entries(grouped).map(([section, questions]) => (
                 <div key={section} className="mb-4">
-                  <h3 className="font-bold mb-2">{section}</h3>
+                  <h3 className="font-bold mb-3 text-orange-500 border-b border-zinc-800 pb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {section}
+                  </h3>
                   {questions.map((q) => (
                     <div key={q.idx} className="mb-4">
                       <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
                         <div className="md:w-2/3">
-                          <span className="font-medium">{q.idx + 1}. {q.label}</span>
+                          <span className="font-medium text-white">{q.idx + 1}. {q.label}</span>
                         </div>
                         <div className="md:w-1/6 mt-2 md:mt-0">
                           <FormField
@@ -165,10 +186,14 @@ export default function KYCForm({ applicationId }) {
                                     value={field.value}
                                     className="flex flex-row space-x-4"
                                   >
-                                    <RadioGroupItem value="yes" id={`yes-${q.idx}`} />
-                                    <FormLabel htmlFor={`yes-${q.idx}`}>Yes</FormLabel>
-                                    <RadioGroupItem value="no" id={`no-${q.idx}`} />
-                                    <FormLabel htmlFor={`no-${q.idx}`}>No</FormLabel>
+                                    <div className="flex items-center">
+                                      <RadioGroupItem value="yes" id={`yes-${q.idx}`} className="border-orange-500 text-orange-500" />
+                                      <FormLabel htmlFor={`yes-${q.idx}`} className="ml-2 text-zinc-300">Yes</FormLabel>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <RadioGroupItem value="no" id={`no-${q.idx}`} className="border-orange-500 text-orange-500" />
+                                      <FormLabel htmlFor={`no-${q.idx}`} className="ml-2 text-zinc-300">No</FormLabel>
+                                    </div>
                                   </RadioGroup>
                                 </FormControl>
                                 <FormMessage />
@@ -182,9 +207,13 @@ export default function KYCForm({ applicationId }) {
                             name={`answers.${q.idx}.comment`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Comment</FormLabel>
+                                <FormLabel className="text-zinc-300 font-medium">Comment</FormLabel>
                                 <FormControl>
-                                  <Textarea {...field} placeholder="Enter comment" />
+                                  <Textarea 
+                                    {...field} 
+                                    placeholder="Enter comment" 
+                                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -197,25 +226,41 @@ export default function KYCForm({ applicationId }) {
                 </div>
               ))}
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(-1)}
-              >
-                Previous
-              </Button>
-              <div className="flex gap-2">
+            <CardFooter className="flex flex-col md:flex-row md:justify-between gap-4 mt-4 bg-zinc-900/80 border-t border-zinc-800">
+              <div className="flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate(-1)}
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all duration-200 flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Previous
+                </Button>
+              </div>
+              <div className="flex gap-3">
                 <SaveProgressButton 
                   onSave={() => saveFormData(form.getValues())}
                   variant="secondary"
+                  className="bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200"
                 />
-                <Button type="submit">Next</Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/20 flex items-center gap-2"
+                >
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
               </div>
             </CardFooter>
           </form>
         </Form>
-      </Card>
-    </div>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }

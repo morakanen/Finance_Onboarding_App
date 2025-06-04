@@ -149,18 +149,30 @@ async def logout(redirect: str = None):
 
 @app.post("/login")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    # Debug log to see what's being received
+    print(f"Login attempt for user: {form_data.username}")
+    
+    # Find the user by email
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-    # Check if trying to access admin dashboard
-    redirect_path = form_data.scopes[0] if form_data.scopes else ""
+    
+    # Handle scopes safely - avoid index errors if scopes is empty
+    redirect_path = ""
+    if hasattr(form_data, 'scopes') and form_data.scopes:
+        try:
+            redirect_path = form_data.scopes[0]
+        except (IndexError, TypeError):
+            redirect_path = ""
+    
+    # Check admin access if needed
     if "/admin/" in redirect_path and user.role != "admin":
         raise HTTPException(
             status_code=403,
             detail="Access denied. Admin privileges required."
         )
 
+    # Generate token and return user data
     token = create_access_token({"sub": user.email, "role": user.role})
     return {
         "access_token": token,

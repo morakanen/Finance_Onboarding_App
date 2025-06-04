@@ -3,6 +3,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useLocation } from "react-router-dom";
 import * as z from "zod";
+import { motion } from "framer-motion";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
 import SaveProgressButton from "../../components/SaveProgressButton";
 
@@ -26,7 +27,7 @@ import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 import { saveClientDetails } from "@/utils/api";
 import useAuthStore from "@/store/AuthStore";
 
-// 1️⃣ Define your validation schema with Zod:
+
 // Helper function to identify required fields
 const isFieldRequired = (fieldName) => {
   const optionalFields = [
@@ -186,37 +187,53 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
   }
 
   return (
-    <div className="mx-auto max-w-5xl w-full">
+    <motion.div 
+      className="mx-auto max-w-5xl w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <OnboardingBreadcrumbs />
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Client Details</h2>
-          <p className="text-sm text-muted-foreground">
-            Please fill in the client’s personal, address, and tax details.
+      <Card className="bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-800">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-white">Client Details</h2>
+          </div>
+          <p className="text-sm text-zinc-400">
+            Please provide your client details
           </p>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 bg-zinc-900/70">
               {/* Top Row: Title, Names, Salutation, Gender */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
+              >
                 {/* Title */}
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Title</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Title</FormLabel>
                       <FormControl>
                         {/* Example using Shadcn Select */}
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger data-testid="select-title" id="debug-title-select">
-                            <SelectValue placeholder="Select Title" />
+                          <SelectTrigger
+                            className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500" 
+                            data-testid="select-title" 
+                            id="debug-title-select"
+                          >
+                            <SelectValue className="text-zinc-400" placeholder="Select Title" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                             <SelectItem data-testid="select-title-option-Mr" value="Mr">Mr</SelectItem>
                             <SelectItem data-testid="select-title-option-Mrs" value="Mrs">Mrs</SelectItem>
                             <SelectItem data-testid="select-title-option-Ms" value="Ms">Ms</SelectItem>
@@ -235,9 +252,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="salutation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Salutation</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Salutation</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Dear John" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="e.g. Dear John" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -250,9 +271,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">First Name</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="John" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -265,9 +290,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="middleName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('middleName') ? 'required' : ''}>Middle Name</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Middle Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Michael" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Michael" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -280,9 +309,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Last Name</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Doe" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -295,16 +328,17 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Gender</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Gender</FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger data-testid="select-gender">
-                            <SelectValue placeholder="Select Gender" />
+                          <SelectTrigger
+                            className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500" data-testid="select-gender">
+                            <SelectValue className="text-zinc-400" placeholder="Select Gender" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                             <SelectItem data-testid="select-gender-option-male" value="male">Male</SelectItem>
                             <SelectItem data-testid="select-gender-option-female" value="female">Female</SelectItem>
                             <SelectItem data-testid="select-gender-option-other" value="other">Other</SelectItem>
@@ -315,19 +349,34 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                     </FormItem>
                   )}
                 />
-              </div>
+              </motion.div>
 
               {/* Address Section */}
-              <h3 className="font-semibold text-lg">Main Address</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="font-semibold text-lg text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Main Address
+              </h3>
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ staggerChildren: 0.1, delayChildren: 0.3 }}
+              >
                 <FormField
                   control={form.control}
                   name="addressLine1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Address Line 1</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Address Line 1</FormLabel>
                       <FormControl>
-                        <Input placeholder="123 Example St" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="123 Example St" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -338,9 +387,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="addressLine2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('addressLine2') ? 'required' : ''}>Address Line 2</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Address Line 2</FormLabel>
                       <FormControl>
-                        <Input placeholder="Apt #10" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Apt #10" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -351,9 +404,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="town"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Town</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Town</FormLabel>
                       <FormControl>
-                        <Input placeholder="Norwich" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Norwich" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -364,9 +421,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="county"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('county') ? 'required' : ''}>County</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">County</FormLabel>
                       <FormControl>
-                        <Input placeholder="Norfolk" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Norfolk" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -377,9 +438,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Country</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Country</FormLabel>
                       <FormControl>
-                        <Input placeholder="UK" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="UK" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -390,28 +455,46 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="postcode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Postcode</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Postcode</FormLabel>
                       <FormControl>
-                        <Input placeholder="AB12 3CD" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="AB12 3CD" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
+              </motion.div>
 
               {/* Key Dates & Tax Info */}
-              <h3 className="font-semibold text-lg">Tax and Personal Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="font-semibold text-lg text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Tax and Personal Details
+              </h3>
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ staggerChildren: 0.1, delayChildren: 0.4 }}
+              >
                 {/* DOB */}
                 <FormField
                   control={form.control}
                   name="dob"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">DOB</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">DOB</FormLabel>
                       <FormControl>
-                        <Input placeholder="dd/mm/yyyy" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="dd/mm/yyyy" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -423,9 +506,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="dod"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">DOD</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">DOD</FormLabel>
                       <FormControl>
-                        <Input placeholder="dd/mm/yyyy" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="dd/mm/yyyy" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -437,9 +524,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="vatNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">VAT Number</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">VAT Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="GB123456789" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="GB123456789" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -451,9 +542,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="niNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">NI Number</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">NI Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="AB123456C" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="AB123456C" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -465,9 +560,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="utr"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">UTR</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">UTR</FormLabel>
                       <FormControl>
-                        <Input placeholder="Unique Taxpayer Reference" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Unique Taxpayer Reference" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -479,16 +578,17 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="taxType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Tax Type</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Tax Type</FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Tax Type" />
+                          <SelectTrigger
+                            className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500">
+                            <SelectValue className="text-zinc-400" placeholder="Select Tax Type" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                             <SelectItem data-testid="select-taxType-option-selfAssessment" value="selfAssessment">Self Assessment</SelectItem>
                             <SelectItem data-testid="select-taxType-option-corporationTax" value="corporationTax">Corporation Tax</SelectItem>
                             <SelectItem data-testid="select-taxType-option-partnership" value="partnership">Partnership</SelectItem>
@@ -505,16 +605,17 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="taxInvestigationCover"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Tax Investigation Cover</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Tax Investigation Cover</FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Option" />
+                          <SelectTrigger
+                            className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500">
+                            <SelectValue className="text-zinc-400" placeholder="Select Option" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                             <SelectItem data-testid="select-taxInvestigationCover-option-yes" value="yes">Yes</SelectItem>
                             <SelectItem data-testid="select-taxInvestigationCover-option-no" value="no">No</SelectItem>
                           </SelectContent>
@@ -530,9 +631,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="yearEnd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Year End</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Year End</FormLabel>
                       <FormControl>
-                        <Input placeholder="dd/mm/yyyy" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="dd/mm/yyyy" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -545,7 +650,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="isVatInvoiceRequired"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Is VAT invoice required?</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Is VAT invoice required?</FormLabel>
                       <FormControl>
                         <RadioGroup
                           className="flex gap-4"
@@ -553,12 +658,20 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                           defaultValue={field.value}
                         >
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-yes" value="yes" />
-                            <Label>Yes</Label>
+                            <RadioGroupItem
+                              className="border-orange-500 text-orange-500" 
+                              data-testid="radio-isVatInvoiceRequired-yes" 
+                              value="yes"
+                            />
+                            <Label className="text-zinc-300">Yes</Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-no" value="no" />
-                            <Label>No</Label>
+                            <RadioGroupItem
+                              className="border-orange-500 text-orange-500" 
+                              data-testid="radio-isVatInvoiceRequired-no" 
+                              value="no"
+                            />
+                            <Label className="text-zinc-300">No</Label>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -573,7 +686,7 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="isStatementRequired"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Is statement required?</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Is statement required?</FormLabel>
                       <FormControl>
                         <RadioGroup
                           className="flex gap-4"
@@ -581,12 +694,20 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                           defaultValue={field.value}
                         >
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-yes" value="yes" />
-                            <Label>Yes</Label>
+                            <RadioGroupItem
+                              className="border-orange-500 text-orange-500" 
+                              data-testid="radio-isVatInvoiceRequired-yes" 
+                              value="yes"
+                            />
+                            <Label className="text-zinc-300">Yes</Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-no" value="no" />
-                            <Label>No</Label>
+                            <RadioGroupItem
+                              className="border-orange-500 text-orange-500" 
+                              data-testid="radio-isVatInvoiceRequired-no" 
+                              value="no"
+                            />
+                            <Label className="text-zinc-300">No</Label>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -594,18 +715,28 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                     </FormItem>
                   )}
                 />
-              </div>
+              </motion.div>
 
               {/* Billing Address Toggle */}
-              <h3 className="font-semibold text-lg">Billing Address</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="font-semibold text-lg text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                Billing Address
+              </h3>
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ staggerChildren: 0.1, delayChildren: 0.5 }}
+              >
                 {/* Is billing address same as main address? */}
                 <FormField
                   control={form.control}
                   name="isBillingSameAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('isBillingSameAddress') ? 'required' : ''}>Is billing address same as main address?</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Is billing address same as main address?</FormLabel>
                       <FormControl>
                         <RadioGroup
                           className="flex gap-4"
@@ -613,12 +744,20 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                           defaultValue={field.value}
                         >
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-yes" value="yes" />
-                            <Label>Yes</Label>
+                            <RadioGroupItem
+                              className="border-orange-500 text-orange-500" 
+                              data-testid="radio-isVatInvoiceRequired-yes" 
+                              value="yes"
+                            />
+                            <Label className="text-zinc-300">Yes</Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2">
-                            <RadioGroupItem data-testid="radio-isVatInvoiceRequired-no" value="no" />
-                            <Label>No</Label>
+                            <RadioGroupItem
+                              className="border-orange-500 text-orange-500" 
+                              data-testid="radio-isVatInvoiceRequired-no" 
+                              value="no"
+                            />
+                            <Label className="text-zinc-300">No</Label>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -635,9 +774,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingAddressLine1"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isFieldRequired('billingAddressLine1') ? 'required' : ''}>Billing Address Line 1</FormLabel>
+                          <FormLabel className="text-zinc-300 font-medium">Billing Address Line 1</FormLabel>
                           <FormControl>
-                            <Input placeholder="123 Billing Rd" {...field} />
+                            <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="123 Billing Rd" 
+                          {...field}
+                        />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -648,9 +791,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingAddressLine2"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isFieldRequired('billingAddressLine2') ? 'required' : ''}>Billing Address Line 2</FormLabel>
+                          <FormLabel className="text-zinc-300 font-medium">Billing Address Line 2</FormLabel>
                           <FormControl>
-                            <Input placeholder="Suite #10" {...field} />
+                            <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Suite #10" 
+                          {...field}
+                        />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -661,9 +808,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingTown"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isFieldRequired('billingTown') ? 'required' : ''}>Billing Town</FormLabel>
+                          <FormLabel className="text-zinc-300 font-medium">Billing Town</FormLabel>
                           <FormControl>
-                            <Input placeholder="Norwich" {...field} />
+                            <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Norwich" 
+                          {...field}
+                        />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -674,9 +825,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingCounty"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isFieldRequired('billingCounty') ? 'required' : ''}>Billing County</FormLabel>
+                          <FormLabel className="text-zinc-300 font-medium">Billing County</FormLabel>
                           <FormControl>
-                            <Input placeholder="Norfolk" {...field} />
+                            <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Norfolk" 
+                          {...field}
+                        />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -687,9 +842,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingCountry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isFieldRequired('billingCountry') ? 'required' : ''}>Billing Country</FormLabel>
+                          <FormLabel className="text-zinc-300 font-medium">Billing Country</FormLabel>
                           <FormControl>
-                            <Input placeholder="UK" {...field} />
+                            <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="UK" 
+                          {...field}
+                        />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -700,9 +859,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                       name="billingPostcode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isFieldRequired('billingPostcode') ? 'required' : ''}>Billing Postcode</FormLabel>
+                          <FormLabel className="text-zinc-300 font-medium">Billing Postcode</FormLabel>
                           <FormControl>
-                            <Input placeholder="AB12 3CD" {...field} />
+                            <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="AB12 3CD" 
+                          {...field}
+                        />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -710,20 +873,34 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                     />
                   </>
                 )}
-              </div>
+              </motion.div>
 
               {/* Contact Preferences */}
-              <h3 className="font-semibold text-lg">Contact Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="font-semibold text-lg text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Contact Details
+              </h3>
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ staggerChildren: 0.1, delayChildren: 0.6 }}
+              >
                 {/* Email Correspondence */}
                 <FormField
                   control={form.control}
                   name="emailCorrespondence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Email (Correspondence)</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Email (Correspondence)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Email for official notices" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Email for official notices" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -735,9 +912,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailFeeNote"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Email (Fee Note)</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Email (Fee Note)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Email for fee notes" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Email for fee notes" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -749,9 +930,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailVatInvoice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Email (VAT Invoice)</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Email (VAT Invoice)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Email for VAT invoices" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Email for VAT invoices" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -763,9 +948,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="emailStatement"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Email (Statement)</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Email (Statement)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Email for statements" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Email for statements" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -777,9 +966,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="backupEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('backupEmail') ? 'required' : ''}>Backup Email</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Backup Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="Backup or secondary email" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="Backup or secondary email" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -791,9 +984,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="telephone1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required">Telephone 1</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Telephone 1</FormLabel>
                       <FormControl>
-                        <Input placeholder="+44 1234 567890" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="+44 1234 567890" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -805,9 +1002,13 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="telephone2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('telephone2') ? 'required' : ''}>Telephone 2</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Telephone 2</FormLabel>
                       <FormControl>
-                        <Input placeholder="+44 1234 000000" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="+44 1234 000000" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -819,31 +1020,58 @@ function ClientDetailsForm({ applicationId }) { // applicationId now comes from 
                   name="mobile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('mobile') ? 'required' : ''}>Mobile</FormLabel>
+                      <FormLabel className="text-zinc-300 font-medium">Mobile</FormLabel>
                       <FormControl>
-                        <Input placeholder="+44 7777 123456" {...field} />
+                        <Input
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20" 
+                          placeholder="+44 7777 123456" 
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
+              </motion.div>
             </CardContent>
 
             {/* Submit */}
-            <CardFooter className="flex justify-between">
-              <SaveProgressButton 
-                onSave={() => saveFormData(form.getValues())}
-                variant="secondary"
-              />
-              <Button type="submit" className="ml-auto">
-                Save & Continue
+            <CardFooter className="flex justify-between bg-gradient-to-b from-zinc-900 to-zinc-900/90 border-t border-zinc-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(-1)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
               </Button>
+              <div className="flex gap-3">
+                <SaveProgressButton 
+                  onSave={async () => {
+                    const values = form.getValues();
+                    return await saveFormProgress('client-details', values, applicationId);
+                  }}
+                  variant="secondary"
+                  className="bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200"
+                />
+                <Button 
+                  type="submit" 
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/20"
+                >
+                  <span>Save & Continue</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
+              </div>
             </CardFooter>
           </form>
         </Form>
       </Card>
-    </div>
+    </motion.div>
   );
 }
 

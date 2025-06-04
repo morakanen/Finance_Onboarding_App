@@ -3,6 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
 import SaveProgressButton from "../../components/SaveProgressButton";
 import {
@@ -104,20 +105,30 @@ export default function AssignmentsForm({ applicationId }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl w-full">
+    <motion.div 
+      className="mx-auto max-w-5xl w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <OnboardingBreadcrumbs />
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Assignments</h2>
-          <p className="text-sm text-muted-foreground">
+      <Card className="bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-zinc-800">
+          <h2 className="text-xl font-semibold text-white flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Assignments
+          </h2>
+          <p className="text-sm text-zinc-400">
             Please select the work to be undertaken and enter estimated fees
           </p>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 bg-zinc-900/70">
               <div>
-                <FormLabel className={isFieldRequired('assignments') ? 'required' : ''}>Assignments</FormLabel>
+                <FormLabel className={`text-base font-medium text-white ${isFieldRequired('assignments') ? 'required' : ''}`}>Assignments</FormLabel>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 mt-2">
                   {ASSIGNMENT_OPTIONS.map((option) => (
                     <FormField
@@ -138,7 +149,7 @@ export default function AssignmentsForm({ applicationId }) {
                               }}
                             />
                           </FormControl>
-                          <FormLabel className="font-normal">{option}</FormLabel>
+                          <FormLabel className="font-normal text-zinc-300">{option}</FormLabel>
                         </FormItem>
                       )}
                     />
@@ -152,9 +163,13 @@ export default function AssignmentsForm({ applicationId }) {
                   name="recurringFees"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('recurringFees') ? 'required' : ''}>Recurring Fees</FormLabel>
+                      <FormLabel className={`text-base font-medium text-white ${isFieldRequired('recurringFees') ? 'required' : ''}`}>Recurring Fees</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter recurring fees" />
+                        <Input 
+                          {...field} 
+                          placeholder="Enter recurring fees" 
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -165,9 +180,13 @@ export default function AssignmentsForm({ applicationId }) {
                   name="nonRecurringFees"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={isFieldRequired('nonRecurringFees') ? 'required' : ''}>Non-recurring Fees</FormLabel>
+                      <FormLabel className={`text-base font-medium text-white ${isFieldRequired('nonRecurringFees') ? 'required' : ''}`}>Non-recurring Fees</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter non-recurring fees" />
+                        <Input 
+                          {...field} 
+                          placeholder="Enter non-recurring fees" 
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -175,25 +194,38 @@ export default function AssignmentsForm({ applicationId }) {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-between bg-zinc-900/80 border-t border-zinc-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate(-1)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all duration-200"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
                 Previous
               </Button>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <SaveProgressButton 
                   onSave={() => saveFormData(form.getValues())}
                   variant="secondary"
+                  className="bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200"
                 />
-                <Button type="submit">Next</Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/20 flex items-center gap-2"
+                >
+                  <span>Next</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
               </div>
             </CardFooter>
           </form>
         </Form>
       </Card>
-    </div>
+    </motion.div>
   );
 }

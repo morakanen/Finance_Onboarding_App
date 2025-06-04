@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
 import SaveProgressButton from "../../components/SaveProgressButton";
 // Shadcn UI form components
@@ -11,7 +12,6 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormDescription,
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
@@ -100,31 +100,41 @@ export default function ReferralsForm({ applicationId }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl w-full">
+    <motion.div 
+      className="mx-auto max-w-5xl w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <OnboardingBreadcrumbs />
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Referrals</h2>
-          <p className="text-sm text-muted-foreground">
+      <Card className="bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-800">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h2 className="text-xl font-semibold text-white">Referrals</h2>
+          </div>
+          <p className="text-sm text-zinc-400">
             Please provide referral details
           </p>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 bg-zinc-900/70">
               <FormField
                 control={form.control}
                 name="introductoryCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className={isFieldRequired('introductoryCategory') ? 'required' : ''}>Introductory Category</FormLabel>
+                    <FormLabel className={`${isFieldRequired('introductoryCategory') ? 'required' : ''} text-zinc-300 font-medium`}>Introductory Category</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Introductory category" />
+                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500">
+                          <SelectValue className="text-zinc-400" placeholder="Introductory category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                         <SelectItem value="ifa">IFA</SelectItem>
                         <SelectItem value="accountant">Accountant</SelectItem>
                         <SelectItem value="solicitor">Solicitor</SelectItem>
@@ -140,14 +150,14 @@ export default function ReferralsForm({ applicationId }) {
                 name="sector"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className={isFieldRequired('sector') ? 'required' : ''}>Sector</FormLabel>
+                    <FormLabel className={`${isFieldRequired('sector') ? 'required' : ''} text-zinc-300 font-medium`}>Sector</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sector" />
+                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500">
+                          <SelectValue className="text-zinc-400" placeholder="Sector" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                         <SelectItem value="financial">Financial</SelectItem>
                         <SelectItem value="legal">Legal</SelectItem>
                         <SelectItem value="property">Property</SelectItem>
@@ -163,9 +173,12 @@ export default function ReferralsForm({ applicationId }) {
                 name="professionalReferral"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Professional Referral</FormLabel>
+                    <FormLabel className="text-zinc-300 font-medium">Professional Referral</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter professional referral" />
+                      <Input 
+                        {...field} 
+                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        placeholder="Enter professional referral" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -176,34 +189,50 @@ export default function ReferralsForm({ applicationId }) {
                 name="referredBy"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Referred by</FormLabel>
+                    <FormLabel className="text-zinc-300 font-medium">Referred by</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter referred by" />
+                      <Input 
+                        {...field} 
+                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        placeholder="Enter referred by" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-between bg-gradient-to-b from-zinc-900 to-zinc-900/90 border-t border-zinc-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate(-1)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
                 Previous
               </Button>
               <div className="flex gap-2">
                 <SaveProgressButton 
                   onSave={() => saveFormData(form.getValues())}
                   variant="secondary"
+                  className="border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
                 />
-                <Button type="submit">Next</Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                >
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
               </div>
             </CardFooter>
           </form>
         </Form>
       </Card>
-    </div>
+    </motion.div>
   );
 }

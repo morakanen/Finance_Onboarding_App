@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
 import SaveProgressButton from "../../components/SaveProgressButton";
 // Shadcn UI form components
@@ -18,10 +19,7 @@ import {
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { OnboardingBreadcrumbs } from "@/components/ui/Breadcrumbs";
 
 // Helper function to identify required fields
@@ -100,31 +98,41 @@ export default function TradingAsForm({ applicationId }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl w-full">
+    <motion.div 
+      className="mx-auto max-w-5xl w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <OnboardingBreadcrumbs />
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Trading Information</h2>
-          <p className="text-sm text-muted-foreground">
-            Provide business details for sole traders
+      <Card className="bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-800">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <h2 className="text-xl font-semibold text-white">Trading As</h2>
+          </div>
+          <p className="text-sm text-zinc-400">
+            Please provide your business details
           </p>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 bg-zinc-900/70">
               <FormField
                 control={form.control}
                 name="contactType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className={isFieldRequired('contactType') ? 'required' : ''}>Contact Type</FormLabel>
+                    <FormLabel className={`${isFieldRequired('contactType') ? 'required' : ''} text-zinc-300 font-medium`}>Contact Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Contact Type" />
+                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500">
+                          <SelectValue className="text-zinc-400" placeholder="Select Contact Type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                         <SelectItem value="individual">Individual</SelectItem>
                         <SelectItem value="company">Company</SelectItem>
                         <SelectItem value="partnership">Partnership</SelectItem>
@@ -140,14 +148,14 @@ export default function TradingAsForm({ applicationId }) {
                 name="businessType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className={isFieldRequired('businessType') ? 'required' : ''}>Business Type</FormLabel>
+                    <FormLabel className={`${isFieldRequired('businessType') ? 'required' : ''} text-zinc-300 font-medium`}>Business Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Business Type" />
+                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white focus:ring-orange-500/20 focus:border-orange-500">
+                          <SelectValue className="text-zinc-400" placeholder="Select Business Type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
                         <SelectItem value="sole_trader">Sole Trader</SelectItem>
                         <SelectItem value="limited_company">Limited Company</SelectItem>
                         <SelectItem value="partnership">Partnership</SelectItem>
@@ -166,7 +174,10 @@ export default function TradingAsForm({ applicationId }) {
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter company name" />
+                      <Input 
+                        {...field} 
+                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        placeholder="Enter company name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -180,32 +191,48 @@ export default function TradingAsForm({ applicationId }) {
                   <FormItem>
                     <FormLabel>Reg No</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter registration number" />
+                      <Input 
+                        {...field} 
+                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        placeholder="Enter registration number" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-between bg-gradient-to-b from-zinc-900 to-zinc-900/90 border-t border-zinc-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate(-1)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
               >
-                Back
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous
               </Button>
               <div className="flex gap-2">
                 <SaveProgressButton 
                   onSave={() => saveFormData(form.getValues())}
                   variant="secondary"
+                  className="border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
                 />
-                <Button type="submit">Continue</Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                >
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
               </div>
             </CardFooter>
           </form>
         </Form>
       </Card>
-    </div>
+    </motion.div>
   );
 }

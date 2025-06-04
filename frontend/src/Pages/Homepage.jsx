@@ -1,8 +1,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import useAuthStore from "../store/AuthStore";
 
 const HomePage = () => {
+  const { role } = useAuthStore();
+  
+  // Determine dashboard path based on user role
+  const dashboardPath = role === "admin" ? "/admin/dashboard" : "/dashboard";
+  
   return (
     <div className="flex flex-col min-h-screen w-full items-center justify-center bg-zinc-900 text-white px-6">
       <h1 className="text-4xl font-bold mb-4 text-center">Welcome to Client Onboarding</h1>
@@ -15,7 +21,7 @@ const HomePage = () => {
             Start New Form
           </Button> 
         </Link>
-        <Link to="/dashboard">
+        <Link to={dashboardPath}>
           <Button className="bg-transparent text-orange-500 px-6 py-3 rounded-lg border-2 border-orange-500 hover:bg-orange-500 hover:text-white">
             View Dashboard
           </Button>

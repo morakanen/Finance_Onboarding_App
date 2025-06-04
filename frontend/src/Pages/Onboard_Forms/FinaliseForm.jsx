@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { saveFormProgress, loadFormData } from "../../utils/formUtils";
 import { updateApplicationStatus } from "../../utils/api";
 import SaveProgressButton from "../../components/SaveProgressButton";
@@ -124,16 +125,31 @@ export default function FinaliseForm({ applicationId }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl w-full">
+    <motion.div 
+      className="mx-auto max-w-5xl w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <OnboardingBreadcrumbs />
-      <Card className="mb-6">
-        <CardHeader>
-          <h3 className="text-lg font-semibold">Required Documents</h3>
-          <p className="text-sm text-muted-foreground">
-            Please upload any relevant documents for this application
-          </p>
-        </CardHeader>
-        <CardContent>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="mb-6 bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-zinc-800">
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Required Documents
+            </h3>
+            <p className="text-sm text-zinc-400">
+              Please upload any relevant documents for this application
+            </p>
+          </CardHeader>
+        <CardContent className="bg-zinc-900/70">
           {uploadError && (
             <Alert variant="destructive" className="mb-4">
               <AlertTitle>Error</AlertTitle>
@@ -146,23 +162,38 @@ export default function FinaliseForm({ applicationId }) {
           />
         </CardContent>
       </Card>
+      </motion.div>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Finalise</h2>
-        </CardHeader>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card className="bg-zinc-900/90 border border-zinc-800 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-zinc-800">
+            <h2 className="text-xl font-semibold text-white flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Finalise
+            </h2>
+          </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 bg-zinc-900/70">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 <FormField
                   control={form.control}
                   name="preparedBy"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Form prepared by:</FormLabel>
+                      <FormLabel className="text-base font-medium text-white">Form prepared by:</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter your name" />
+                        <Input 
+                          {...field} 
+                          placeholder="Enter your name" 
+                          className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-orange-500/20"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -173,15 +204,15 @@ export default function FinaliseForm({ applicationId }) {
                   name="partnerApproval"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Partner approval:</FormLabel>
+                      <FormLabel className="text-base font-medium text-white">Partner approval:</FormLabel>
                       <FormControl>
                         <Select {...field} value={field.value} onValueChange={field.onChange}>
-  <SelectContent>
-    {PARTNER_OPTIONS.map((o) => (
-      <SelectItem key={o} value={o}>{o}</SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+                          <SelectContent>
+                            {PARTNER_OPTIONS.map((o) => (
+                              <SelectItem key={o} value={o}>{o}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -205,15 +236,15 @@ export default function FinaliseForm({ applicationId }) {
                   name="mlroDeputy"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>MLRO/Deputy:</FormLabel>
+                      <FormLabel className="text-base font-medium text-white">MLRO/Deputy:</FormLabel>
                       <FormControl>
                         <Select {...field} value={field.value} onValueChange={field.onChange}>
-  <SelectContent>
-    {MLRO_OPTIONS.map((o) => (
-      <SelectItem key={o} value={o}>{o}</SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+                          <SelectContent>
+                            {MLRO_OPTIONS.map((o) => (
+                              <SelectItem key={o} value={o}>{o}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -234,21 +265,40 @@ export default function FinaliseForm({ applicationId }) {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            <CardFooter className="flex flex-col md:flex-row md:justify-between gap-4 mt-4 bg-zinc-900/80 border-t border-zinc-800">
+              <div className="flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate(-1)}
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all duration-200 flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                   Previous
                 </Button>
-                <Button type="button" variant="outline">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all duration-200"
+                >
                   Save and Exit
                 </Button>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <SaveProgressButton 
                   onSave={() => saveFormData(form.getValues())}
                   variant="secondary"
+                  className="bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200"
                 />
-                <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                <Button 
+                  type="submit" 
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/20 flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   Submit for review
                 </Button>
               </div>
@@ -256,6 +306,7 @@ export default function FinaliseForm({ applicationId }) {
           </form>
         </Form>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

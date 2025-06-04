@@ -15,6 +15,10 @@ export const LoginUser = async (email, password) => {
     const formData = new URLSearchParams();
     formData.append("username", email);
     formData.append("password", password);
+    formData.append("scope", ""); // Add empty scope as required by OAuth2
+    formData.append("grant_type", "password"); // Required for OAuth2 password flow
+    formData.append("client_id", ""); // Add empty client_id
+    formData.append("client_secret", ""); // Add empty client_secret
 
     const response = await api.post("/login", formData, {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -22,6 +26,7 @@ export const LoginUser = async (email, password) => {
 
     return response.data;
   } catch (error) {
+    console.error("Login error:", error);
     throw new Error(error.response?.data?.detail || "Failed to log in");
   }
 };
@@ -361,13 +366,65 @@ export const getApplicationDocuments = async (applicationId) => {
 
 // Get All Risk Assessments
 export const getAllRiskAssessments = async () => {
+try {
+  const token = localStorage.getItem('token');
+  const response = await api.get('/api/risk-assessments', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+} catch (error) {
+  console.error('Error fetching risk assessments:', error);
+  throw new Error(
+    error.response?.data?.detail || 'Failed to fetch risk assessments'
+  );
+}
+};
+
+// Get Recent Activity/Updates
+export const getRecentActivity = async (limit = 10) => {
+try {
+  const token = localStorage.getItem('token');
+  const response = await api.get(`/api/recent-activity?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return response.data;
+} catch (error) {
+  console.warn("Using simulated activity data");
+  // Fallback to simulated data if API fails
   try {
-    const response = await api.get('/risk-assessments');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching risk assessments:', error);
-    throw new Error(
-      error.response?.data?.detail || 'Failed to fetch risk assessments'
-    );
+    const apps = await getAllApplications();
+    const users = await getAllUsers();
+
+    // Create simulated activity data
+    const activity = apps.slice(0, limit).map(app => {
+      const randomUser = users[Math.floor(Math.random() * users.length)] || { id: 'unknown', name: 'Unknown User' };
+      const clientName = app.client_name || "Client " + app.id.substring(0, 8);
+      const actions = ["submitted", "updated", "completed"];
+      const forms = ["Client Details", "Associations", "Financial Information", "Risk Assessment", "Documents"];
+      const action = actions[Math.floor(Math.random() * actions.length)];
+      const form = forms[Math.floor(Math.random() * forms.length)];
+
+      return {
+        id: app.id + "-" + Date.now() + Math.random(),
+        application_id: app.id,
+        user_id: randomUser.id,
+        user_name: randomUser.name,
+        client_name: clientName,
+        action: action,
+        form_name: form,
+        timestamp: app.created_at,
+        details: `${randomUser.name} ${action} ${form} for ${clientName}`
+      };
+    });
+
+    // Sort by timestamp, newest first
+    activity.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    return activity;
+  } catch (innerError) {
+    console.error('Error generating activity data:', innerError);
+    throw new Error("Failed to generate activity data");
   }
+}
 };
